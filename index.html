@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>月の影ハンバーガーショップ</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <!-- お店のタイトル -->
+    <h1>月の影ハンバーガーショップ</h1>
+    <p>〜ほそぼそと営業中〜</p>
+    <p>〜通貨は月幣です。￥と相場は常にれんどしております〜</p>
+
+    <!-- 業務日誌ページへのリンク -->
+    <p>
+      <a href="diary.html" style="text-decoration: none;">
+        <button style="cursor: pointer;">📖 業務日誌を開く</button>
+      </a>
+    </p>
+    <!-- ハンバーガーのメニュー -->
+    <h2>Burgers</h2>
+    <ul id="burger-list">
+      <li>満月チーズバーガー 850月幣</li>
+      <li>三日月アボカドエビバーガー 900月幣</li>
+      <li>宵闇テリヤキバーガー 800月幣</li>
+      <li>【夜限定】おぼろ月夜の和風照り焼き蒟蒻バーガー 780月幣</li>
+    </ul>
+
+    <!-- ドリンクのメニュー -->
+    <h2>Drinks</h2>
+    <ul id="drink-list">
+      <li>抹茶ラテ 550月幣</li>
+      <li>ミントティー 450月幣</li>
+      <li>当店自慢のオリジナルブレンドコーヒー 450月幣</li>
+    </ul>
+
+    <!-- 注文したものを表示するエリア
+    <hr>
+    <p>選択中の注文：<span id="selected-item">まだ選ばれていません</span></p> -->
+
+    <!-- 注文（カート）エリア -->
+    <hr>
+    <h2>ご注文内容（カート）</h2>
+
+    <!-- 選んだ商品がここにリストで並びます -->
+    <ul id="cart-list">
+      <li>まだ何も選ばれていません</li>
+    </ul>
+
+    <!-- 合計金額を表示するエリア -->
+    <p><strong>合計：<span id="total-price">0</span> 月幣</strong></p>
+  
+    <!-- カートを空にするボタン -->
+    <button id="clear-btn">カートを空にする</button>
+
+<script src="script.js"></script>
+  </body>
+</html>

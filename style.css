@@ -1,0 +1,17 @@
+@charset "UTF-8";
+
+/* リストの黒丸を削除して、文字の前に肉球マークをつける */
+ul {
+  list-style: none; /* もともとの黒丸を消す */
+  padding-left: 10px;
+}
+
+li {
+  cursor: pointer; /* マウスをのせたときに指マークにする */
+  padding: 6px 0;
+}
+
+/* liタグの前に「🐾」を自動で表示させる魔法！ */
+li::before {
+  content: "🐾 ";
+}

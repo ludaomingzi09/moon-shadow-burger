@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>月の影ハンバーガーショップ - 業務日誌</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>📖 店舗業務日誌</h1>
+
+  <!-- お店に戻るボタン -->
+  <p>
+    <a href="index.html" style="text-decoration: none;">
+      <button style="cursor: pointer;">🏠 お店のトップに戻る</button>
+    </a>
+  </p>
+
+  <hr>
+
+  <!-- 日誌の入力フォーム -->
+  <div id="diary-form">
+    <h3>日誌を書く</h3>
+    
+    <p>
+      <label for="diary-date">日付：</label><br>
+      <input type="date" id="diary-date">
+    </p>
+
+    <p>
+      <label for="diary-sales">本日の売上メモ（月幣）：</label><br>
+      <input type="number" id="diary-sales" placeholder="例: 3500">
+    </p>
+
+    <p>
+      <label for="diary-content">出来事・新商品メモ：</label><br>
+      <textarea id="diary-content" rows="6" cols="40" placeholder="今日のお客さまとの会話や、試作メモなど..."></textarea>
+    </p>
+
+    <button id="save-diary-btn">日誌を保存する（仮）</button>
+    <hr>
+
+    <!-- 過去の日誌一覧を表示するエリア -->
+    <h2>📚 過去の業務日誌</h2>
+    <div id="diary-list">
+      <!-- ここに保存された日誌が自動で追加されます -->
+    </div>
+
+  </div>
+  
+  <script src="diary.js"></script>
+</body>
+</html>
