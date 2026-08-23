@@ -2,52 +2,61 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>月の影ハンバーガーショップ - 業務日誌</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>業務日誌 | 月の影ハンバーガーショップ</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h1>📖 店舗業務日誌</h1>
+  <header>
+    <h1>🌙 月の影ハンバーガーショップ</h1>
+    <p>〜 店主の修業日誌・お知らせ 〜</p>
+  </header>
 
-  <!-- お店に戻るボタン -->
-  <p>
-    <a href="index.html" style="text-decoration: none;">
-      <button style="cursor: pointer;">🏠 お店のトップに戻る</button>
-    </a>
-  </p>
+  <main style="max-width: 600px; margin: 20px auto; padding: 0 10px;">
 
-  <hr>
-
-  <!-- 日誌の入力フォーム -->
-  <div id="diary-form">
-    <h3>日誌を書く</h3>
-    
-    <p>
-      <label for="diary-date">日付：</label><br>
-      <input type="date" id="diary-date">
-    </p>
-
-    <p>
-      <label for="diary-sales">本日の売上メモ（月幣）：</label><br>
-      <input type="number" id="diary-sales" placeholder="例: 3500">
-    </p>
-
-    <p>
-      <label for="diary-content">出来事・新商品メモ：</label><br>
-      <textarea id="diary-content" rows="6" cols="40" placeholder="今日のお客さまとの会話や、試作メモなど..."></textarea>
-    </p>
-
-    <button id="save-diary-btn">日誌を保存する（仮）</button>
-    <hr>
-
-    <!-- 過去の日誌一覧を表示するエリア -->
-    <h2>📚 過去の業務日誌</h2>
-    <div id="diary-list">
-      <!-- ここに保存された日誌が自動で追加されます -->
+    <div style="margin-bottom: 20px;">
+      <a href="index.html" style="text-decoration: none; color: #333; font-weight: bold;">← お店トップへ戻る</a>
     </div>
 
-  </div>
-  
+    <!-- 入力フォームエリア -->
+    <section style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #ddd;">
+      <h3>📝 日誌をかく</h3>
+
+      <div style="margin-bottom: 10px;">
+        <label>📅 日付：</label><br>
+        <input type="date" id="diary-date" style="padding: 5px; width: 100%; max-width: 200px;">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label>💰 本日の売上（月幣）：</label><br>
+        <input type="number" id="diary-sales" placeholder="例: 10000" style="padding: 5px; width: 100%; max-width: 200px;">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label>📝 本文：</label><br>
+        <!-- 装飾ボタン（シンプル設計） -->
+        <div style="margin-bottom: 5px;">
+          <button type="button" id="btn-bold"><b>太字</b></button>
+          <button type="button" id="btn-red" style="color:red;">赤字</button>
+          <button type="button" id="btn-orange" style="color:orange;">オレンジ字</button>
+          <button type="button" id="btn-big">大文字</button>
+        </div>
+        <!-- 長文入力用の大きな枠 -->
+        <textarea id="diary-content" rows="8" placeholder="ここに日誌を書きます。上のボタンを押すと文字の装飾ができます！" style="width: 100%; padding: 8px; box-sizing: border-box;"></textarea>
+      </div>
+
+      <button id="save-diary-btn" style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;">💾 保存して投稿する</button>
+    </section>
+
+    <!-- 日誌一覧表示エリア -->
+    <section>
+      <h2>📖 過去の日誌一覧</h2>
+      <div id="diary-list"></div>
+    </section>
+
+  </main>
+
   <script src="diary.js"></script>
 </body>
 </html>

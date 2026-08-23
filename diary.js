@@ -1,84 +1,153 @@
 "use strict";
 {
+// === ネット倉庫（JSONBin）の設定 ===
+const BIN_ID = "6a8a43f5da38895dfe05659b"; // 自分のBin ID
+const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq"; //自分のマスターキー
 
-  // 入力欄とボタン、一覧表示エリアを取得
 const dateInput = document.querySelector("#diary-date");
 const salesInput = document.querySelector("#diary-sales");
 const contentInput = document.querySelector("#diary-content");
 const saveBtn = document.querySelector("#save-diary-btn");
 const diaryList = document.querySelector("#diary-list");
 
-// 画面を開いたときに、保存されている日誌を読み込んで表示する
+const btnBold = document.querySelector("#btn-bold");
+const btnRed = document.querySelector("#btn-red");
+const btnOrange = document.querySelector("#btn-orange");
+const btnBig = document.querySelector("#btn-big");
+
+// 画面を開いたときにネット倉庫から読み込む
 displayDiaries();
 
-// 「保存する」ボタンが押されたときの処理
-saveBtn.addEventListener("click", () => {
+// 文字装飾を行う関数
+function insertTag(startTag, endTag) {
+  const start = contentInput.selectionStart;
+  const end = contentInput.selectionEnd;
+  const text = contentInput.value;
+  const selectedText = text.substring(start, end);
+
+  const replacement = startTag + selectedText + endTag;
+  contentInput.value = text.substring(0, start) + replacement + text.substring(end);
+  contentInput.focus();
+}
+
+btnBold.addEventListener("click", () => insertTag("<b>", "</b>"));
+btnRed.addEventListener("click", () => insertTag("<span style='color:red;'>", "</span>"));
+btnOrange.addEventListener("click", () => insertTag("<span style='color:orange;'>", "</span>"));
+btnBig.addEventListener("click", () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>"));
+
+// 1. ネット倉庫から日誌データを取ってくる関数
+async function getDiariesFromCloud() {
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+      headers: { "X-Master-Key": MASTER_KEY }
+    });
+    const data = await res.json();
+    return data.record.diaries || [];
+  } catch (error) {
+    console.error("読み込みエラー:", error);
+    return [];
+  }
+}
+
+// 2. ネット倉庫に日誌データを保存する関数
+async function saveDiariesToCloud(diaries) {
+  try {
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": MASTER_KEY
+      },
+      body: JSON.stringify({ diaries: diaries })
+    });
+  } catch (error) {
+    console.error("保存エラー:", error);
+    alert("保存に失敗しました...");
+  }
+}
+
+// 「保存する」ボタンが押されたとき
+saveBtn.addEventListener("click", async () => {
   const date = dateInput.value;
   const sales = salesInput.value;
   const content = contentInput.value;
 
-  // 日付か本文が空の場合は警告を出す
   if (!date || !content) {
     alert("日付と本文を入力してください！");
     return;
   }
 
-  // 1日分の日誌データをまとめる（オブジェクト）
+  saveBtn.textContent = "送信中...";
+  saveBtn.disabled = true;
+
+  const savedDiaries = await getDiariesFromCloud();
   const newDiary = {
     date: date,
     sales: sales || 0,
     content: content
   };
 
-  // 記憶箱（localStorage）から今までの日誌を取り出す（無ければ空の配列 []）
-  const savedDiaries = JSON.parse(localStorage.getItem("myDiaries")) || [];
-
-  // 新しい日誌を配列の先頭に追加する
   savedDiaries.unshift(newDiary);
+  await saveDiariesToCloud(savedDiaries);
 
-  // 記憶箱に保存し直す（文字データに変換して保存）
-  localStorage.setItem("myDiaries", JSON.stringify(savedDiaries));
-
-  // 入力欄をきれいに空っぽにする
   dateInput.value = "";
   salesInput.value = "";
   contentInput.value = "";
+  saveBtn.textContent = "💾 保存して投稿する";
+  saveBtn.disabled = false;
 
-  alert("日誌を保存しました！");
-
-  // 画面の一覧表示を更新する
+  alert("ネット上に日誌を公開しました！");
   displayDiaries();
 });
 
-// 記憶箱から日誌を取り出して画面に並べる関数
-function displayDiaries() {
-  const savedDiaries = JSON.parse(localStorage.getItem("myDiaries")) || [];
-  
-  // 一旦表示をリセット
+// 日誌の削除
+async function deleteDiary(index) {
+  if (confirm("この日誌を削除してもよろしいですか？")) {
+    const savedDiaries = await getDiariesFromCloud();
+    savedDiaries.splice(index, 1);
+    await saveDiariesToCloud(savedDiaries);
+    displayDiaries();
+  }
+}
+
+// 画面に並べる関数
+async function displayDiaries() {
+  diaryList.innerHTML = "<p>ネットから日誌を読み込んでいます...</p>";
+  const savedDiaries = await getDiariesFromCloud();
   diaryList.innerHTML = "";
 
   if (savedDiaries.length === 0) {
-    diaryList.innerHTML = "<p>まだ保存された日誌はありません。</p>";
+    diaryList.innerHTML = "<p>まだ公開された日誌はありません。</p>";
     return;
   }
 
-  // 1件ずつカードのように画面に組み立てていく
-  savedDiaries.forEach((diary) => {
+  savedDiaries.forEach((diary, index) => {
     const card = document.createElement("div");
     card.style.border = "1px solid #ccc";
-    card.style.padding = "10px";
-    card.style.marginBottom = "10px";
+    card.style.padding = "15px";
+    card.style.marginBottom = "15px";
     card.style.borderRadius = "8px";
     card.style.backgroundColor = "#fff";
 
     card.innerHTML = `
       <h4>📅 日付：${diary.date}</h4>
       <p>💰 本日の売上：<strong>${diary.sales}</strong> 月幣</p>
-      <p>📝 <strong>メモ：</strong><br>${diary.content.replace(/\n/g, "<br>")}</p>
+      <p>📝 <strong>メモ・出来事：</strong><br>${diary.content.replace(/\n/g, "<br>")}</p>
     `;
 
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "🗑️ この日誌を削除";
+    deleteBtn.style.backgroundColor = "#ff4d4d";
+    deleteBtn.style.color = "white";
+    deleteBtn.style.border = "none";
+    deleteBtn.style.padding = "5px 10px";
+    deleteBtn.style.borderRadius = "4px";
+    deleteBtn.style.cursor = "pointer";
+
+    deleteBtn.addEventListener("click", () => deleteDiary(index));
+
+    card.appendChild(deleteBtn);
     diaryList.appendChild(card);
   });
 }
-
 }  
