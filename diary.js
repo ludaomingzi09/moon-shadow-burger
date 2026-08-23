@@ -1,8 +1,12 @@
 "use strict";
 {
 // === ネット倉庫（JSONBin）の設定 ===
-const BIN_ID = "6a8a43f5da38895dfe05659b"; // 自分のBin ID
-const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq"; //自分のマスターキー
+const BIN_ID = "6a8a43f5da38895dfe05659b"; // あきこさんのBin ID
+// ※ご自身のマスターキー（$2a$10$...）に書き換えてください！
+const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq"; 
+
+// === 投稿・削除用の合言葉（好きなパスワードに変更してください） ===
+const SECRET_PASSWORD = "0404"; 
 
 const dateInput = document.querySelector("#diary-date");
 const salesInput = document.querySelector("#diary-sales");
@@ -77,6 +81,13 @@ saveBtn.addEventListener("click", async () => {
     return;
   }
 
+  // ★合言葉の確認
+  const inputPassword = prompt("店主用パスワード（合言葉）を入力してください：");
+  if (inputPassword !== SECRET_PASSWORD) {
+    alert("合言葉が違います。投稿できませんでした。");
+    return;
+  }
+
   saveBtn.textContent = "送信中...";
   saveBtn.disabled = true;
 
@@ -102,7 +113,14 @@ saveBtn.addEventListener("click", async () => {
 
 // 日誌の削除
 async function deleteDiary(index) {
-  if (confirm("この日誌を削除してもよろしいですか？")) {
+  // ★合言葉の確認
+  const inputPassword = prompt("削除するには店主用パスワード（合言葉）を入力してください：");
+  if (inputPassword !== SECRET_PASSWORD) {
+    alert("合言葉が違います。削除できませんでした。");
+    return;
+  }
+
+  if (confirm("本当にこの日誌を削除してもよろしいですか？")) {
     const savedDiaries = await getDiariesFromCloud();
     savedDiaries.splice(index, 1);
     await saveDiariesToCloud(savedDiaries);

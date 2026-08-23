@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>【管理用】日誌投稿画面 - 月の影ハンバーガー</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 0 10px;
+      background-color: #fff8f0; /* 管理画面だと分かりやすい色 */
+    }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; }
+    input[type="date"], input[type="number"], textarea {
+      width: 100%; padding: 8px; box-sizing: border-box;
+    }
+    textarea { height: 100px; }
+    button {
+      padding: 10px 20px; font-size: 16px; cursor: pointer;
+    }
+    .diary-card {
+      border: 1px solid #ccc; padding: 15px; margin-bottom: 15px;
+      border-radius: 8px; background-color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔒 店主専用 日誌管理・投稿画面</h1>
+  <p>※このページはあきこさん専用です。ブックマークしてお使いください。</p>
+  <hr>
+
+  <h2>📝 新しい日誌を書く</h2>
+  <div class="form-group">
+    <label>日付：</label>
+    <input type="date" id="diary-date">
+  </div>
+  <div class="form-group">
+    <label>本日の売上（月幣）：</label>
+    <input type="number" id="diary-sales" placeholder="例: 12000">
+  </div>
+  <div class="form-group">
+    <label>メモ・出来事：</label>
+    <div style="margin-bottom: 5px;">
+      <button type="button" id="btn-bold"><b>太字</b></button>
+      <button type="button" id="btn-red" style="color:red;">赤字</button>
+      <button type="button" id="btn-orange" style="color:orange;">オレンジ字</button>
+      <button type="button" id="btn-big">大文字</button>
+    </div>
+    <textarea id="diary-content" placeholder="今日の出来事を書きましょう！"></textarea>
+  </div>
+
+  <button id="save-diary-btn" style="background-color: #4CAF50; color: white; border: none; border-radius: 5px;">💾 保存して投稿する</button>
+
+  <hr>
+  <h2>📂 投稿済み日誌の管理（削除）</h2>
+  <div id="diary-list">読み込み中...</div>
+
+  <script>
+    const BIN_ID = "6a8a43f5da38895dfe05659b";
+    const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq"; // ★あきこさんのマスターキーに書き換えてください
+
+    const dateInput = document.querySelector("#diary-date");
+    const salesInput = document.querySelector("#diary-sales");
+    const contentInput = document.querySelector("#diary-content");
+    const saveBtn = document.querySelector("#save-diary-btn");
+    const diaryList = document.querySelector("#diary-list");
+
+    // 装飾ボタンの処理
+    function insertTag(startTag, endTag) {
+      const start = contentInput.selectionStart;
+      const end = contentInput.selectionEnd;
+      const text = contentInput.value;
+      const selectedText = text.substring(start, end);
+      contentInput.value = text.substring(0, start) + startTag + selectedText + endTag + text.substring(end);
+      contentInput.focus();
+    }
+    document.querySelector("#btn-bold").addEventListener("click", () => insertTag("<b>", "</b>"));
+    document.querySelector("#btn-red").addEventListener("click", () => insertTag("<span style='color:red;'>", "</span>"));
+    document.querySelector("#btn-orange").addEventListener("click", () => insertTag("<span style='color:orange;'>", "</span>"));
+    document.querySelector("#btn-big").addEventListener("click", () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>"));
+
+    async function getDiaries() {
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+        headers: { "X-Master-Key": MASTER_KEY }
+      });
+      const data = await res.json();
+      return data.record.diaries || [];
+    }
+
+    async function saveDiaries(diaries) {
+      await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
+        body: JSON.stringify({ diaries: diaries })
+      });
+    }
+
+    async function displayDiaries() {
+      diaryList.innerHTML = "読み込み中...";
+      const diaries = await getDiaries();
+      diaryList.innerHTML = "";
+      if (diaries.length === 0) {
+        diaryList.innerHTML = "<p>投稿された日誌はありません。</p>";
+        return;
+      }
+      diaries.forEach((diary, index) => {
+        const card = document.createElement("div");
+        card.className = "diary-card";
+        card.innerHTML = `
+          <h4>📅 ${diary.date} （売上: ${diary.sales} 月幣）</h4>
+          <p>${diary.content.replace(/\n/g, "<br>")}</p>
+        `;
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "🗑️ 削除";
+        delBtn.style.cssText = "background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;";
+        delBtn.onclick = async () => {
+          if (confirm("本当に削除しますか？")) {
+            const list = await getDiaries();
+            list.splice(index, 1);
+            await saveDiaries(list);
+            displayDiaries();
+          }
+        };
+        card.appendChild(delBtn);
+        diaryList.appendChild(card);
+      });
+    }
+
+    saveBtn.onclick = async () => {
+      if (!dateInput.value || !contentInput.value) {
+        alert("日付と本文を入力してください！");
+        return;
+      }
+      saveBtn.textContent = "送信中...";
+      saveBtn.disabled = true;
+
+      const list = await getDiaries();
+      list.unshift({ date: dateInput.value, sales: salesInput.value || 0, content: contentInput.value });
+      await saveDiaries(list);
+
+      dateInput.value = ""; salesInput.value = ""; contentInput.value = "";
+      saveBtn.textContent = "💾 保存して投稿する";
+      saveBtn.disabled = false;
+      alert("公開しました！");
+      displayDiaries();
+    };
+
+    displayDiaries();
+  </script>
+</body>
+</html>
