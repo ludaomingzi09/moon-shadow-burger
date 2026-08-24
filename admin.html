@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>【管理用】日誌投稿＆復元画面 - 月の影ハンバーガー</title>
+  <title>【管理用】日誌投稿画面 - 月の影ハンバーガー</title>
   <style>
     body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; background-color: #fff8f0; }
     .form-group { margin-bottom: 15px; }
@@ -11,22 +11,12 @@
     textarea { height: 100px; }
     button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
     .diary-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; }
-    .history-card { border: 1px dashed #007bff; padding: 10px; margin-bottom: 10px; background-color: #f0f8ff; }
   </style>
 </head>
 <body>
 
-  <h1>🔒 店主専用 日誌管理＆データ復元</h1>
+  <h1>🔒 店主専用 日誌管理・投稿画面</h1>
   <p>※このページはあきこさん専用です。</p>
-  <hr>
-
-  <div style="background-color: #e6f3ff; border: 2px solid #007bff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-    <h3>🔎 過去の消えた日誌を探す・復元する</h3>
-    <p>下のボタンを押すと、ネット倉庫に保存されている「過去のバックアップ履歴」をすべて読み込みます！</p>
-    <button id="check-history-btn" style="background-color: #007bff; color: white; border: none; border-radius: 5px;">📜 過去の履歴データを全検索する</button>
-    <div id="history-result" style="margin-top: 15px;"></div>
-  </div>
-
   <hr>
 
   <h2>📝 新しい日誌を書く</h2>
@@ -56,7 +46,8 @@
   <div id="diary-list">読み込み中...</div>
 
   <script>
-    const BIN_ID = "6a8a43f5da38895dfe05659b";
+    // LocalStorageからBin IDを取得。なければ新規作成用の設定
+    let BIN_ID = localStorage.getItem("my_new_bin_id") || "6a8a43f5da38895dfe05659b";
     const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq";
 
     const dateInput = document.querySelector("#diary-date");
@@ -64,8 +55,6 @@
     const contentInput = document.querySelector("#diary-content");
     const saveBtn = document.querySelector("#save-diary-btn");
     const diaryList = document.querySelector("#diary-list");
-    const historyBtn = document.querySelector("#check-history-btn");
-    const historyResult = document.querySelector("#history-result");
 
     // 装飾ボタン
     function insertTag(startTag, endTag) {
@@ -81,21 +70,44 @@
     document.querySelector("#btn-orange").onclick = () => insertTag("<span style='color:orange;'>", "</span>");
     document.querySelector("#btn-big").onclick = () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>");
 
-    // 最新データ取得
+    // 新規Bin作成関数
+    async function createNewBin(initialData) {
+      const res = await fetch("https://api.jsonbin.io/v3/b", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": MASTER_KEY,
+          "X-Bin-Private": "false"
+        },
+        body: JSON.stringify({ diaries: initialData })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        BIN_ID = data.metadata.id;
+        localStorage.setItem("my_new_bin_id", BIN_ID);
+        alert("新しい専用データ倉庫を作成しました！\n新しいBin ID: " + BIN_ID + "\n（※このIDをメモして教えていただければdiary.html側も繋ぎ直せます！）");
+        return true;
+      } else {
+        alert("新しい倉庫の作成に失敗しました。マスターキー自体が無効な可能性があります。");
+        return false;
+      }
+    }
+
+    // データ取得
     async function getDiaries() {
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
           headers: { "X-Master-Key": MASTER_KEY },
           cache: "no-cache"
         });
-        if (!res.ok) {
-          alert("【エラー】読み込み失敗（コード: " + res.status + "）\nキーかBIN_IDを確認してください。");
-          return null;
+        if (res.status === 403 || res.status === 404) {
+          // 403エラーなら新規作成を促す
+          return "NEED_CREATE";
         }
+        if (!res.ok) return null;
         const data = await res.json();
         return data.record.diaries || [];
       } catch (e) {
-        alert("【通信エラー】 " + e.message);
         return null;
       }
     }
@@ -108,24 +120,26 @@
           headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
           body: JSON.stringify({ diaries: diaries })
         });
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          alert("【保存エラー】（コード: " + res.status + "）\n詳細: " + (errData.message || "送信に失敗しました"));
-          return false;
+        if (res.status === 403) {
+          // 403の場合は新しい倉庫を作成して保存
+          return await createNewBin(diaries);
         }
-        return true;
+        return res.ok;
       } catch (e) {
-        alert("【通信エラー】 " + e.message);
         return false;
       }
     }
 
-    // 最新の一覧表示
+    // 一覧表示
     async function displayDiaries() {
       diaryList.innerHTML = "読み込み中...";
       const diaries = await getDiaries();
+      if (diaries === "NEED_CREATE") {
+        diaryList.innerHTML = "<p style='color:orange;'>⚠️ 現在の鍵で新しい倉庫を自動作成します。上のフォームから最初の投稿を試してください！</p>";
+        return;
+      }
       if (!diaries) {
-        diaryList.innerHTML = "<p style='color:red;'>データの読み込みに失敗しました。</p>";
+        diaryList.innerHTML = "<p style='color:red;'>読み込みエラーが発生しました。</p>";
         return;
       }
       diaryList.innerHTML = diaries.length === 0 ? "<p>投稿された日誌はありません。</p>" : "";
@@ -139,9 +153,11 @@
         delBtn.onclick = async () => {
           if (confirm("本当に削除しますか？")) {
             const currentList = await getDiaries();
-            currentList.splice(index, 1);
-            await saveDiaries(currentList);
-            displayDiaries();
+            if (Array.isArray(currentList)) {
+              currentList.splice(index, 1);
+              await saveDiaries(currentList);
+              displayDiaries();
+            }
           }
         };
         card.appendChild(delBtn);
@@ -149,77 +165,25 @@
       });
     }
 
-    // 履歴検索
-    historyBtn.onclick = async () => {
-      historyResult.innerHTML = "過去のバックアップを検索中...";
-      try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/versions`, {
-          headers: { "X-Master-Key": MASTER_KEY }
-        });
-        if (!res.ok) {
-          historyResult.innerHTML = "<p style='color:red;'>履歴読み込み失敗（コード: " + res.status + "）</p>";
-          return;
-        }
-        const data = await res.json();
-        const versions = data.versions || [];
-
-        if (versions.length === 0) {
-          historyResult.innerHTML = "<p>過去の履歴が見つかりませんでした。</p>";
-          return;
-        }
-
-        historyResult.innerHTML = `<p><b>${versions.length}件の過去バックアップが見つかりました！分析中...</b></p>`;
-
-        for (let i = 0; i < versions.length; i++) {
-          const v = versions[i];
-          const vRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/versions/${v.version}`, {
-            headers: { "X-Master-Key": MASTER_KEY }
-          });
-          const vData = await vRes.json();
-          const list = vData.record.diaries || [];
-
-          const box = document.createElement("div");
-          box.className = "history-card";
-          let datesText = list.map(d => d.date).join(" , ");
-          box.innerHTML = `
-            <b>📦 バックアップ #${i + 1} (${list.length}件の日誌)</b><br>
-            <small>含まれる日付: ${datesText || "なし"}</small><br>
-          `;
-
-          const restoreBtn = document.createElement("button");
-          restoreBtn.textContent = "🔄 この状態に戻す（復元）";
-          restoreBtn.style.cssText = "margin-top:5px; background:#007bff; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer;";
-          restoreBtn.onclick = async () => {
-            if (confirm(`このバックアップ（${list.length}件データ）で現在の日誌を上書き復元しますか？`)) {
-              await saveDiaries(list);
-              alert("復元が完了しました！");
-              displayDiaries();
-            }
-          };
-          box.appendChild(restoreBtn);
-          historyResult.appendChild(box);
-        }
-      } catch (e) {
-        historyResult.innerHTML = "<p style='color:red;'>エラー: " + e.message + "</p>";
-      }
-    };
-
     // 保存ボタン
     saveBtn.onclick = async () => {
       if (!dateInput.value || !contentInput.value) { alert("日付と本文を入力してください！"); return; }
       saveBtn.textContent = "送信中..."; saveBtn.disabled = true;
-      const currentList = await getDiaries();
-      if (!currentList) {
-        saveBtn.textContent = "💾 保存して投稿する";
-        saveBtn.disabled = false;
-        return;
+      
+      let currentList = await getDiaries();
+      if (currentList === "NEED_CREATE" || !Array.isArray(currentList)) {
+        currentList = [];
       }
+
       currentList.unshift({ date: dateInput.value, sales: salesInput.value || 0, content: contentInput.value });
+      
       const success = await saveDiaries(currentList);
       if (success) {
         dateInput.value = ""; salesInput.value = ""; contentInput.value = "";
-        alert("安全に公開されました！");
+        alert("安全に保存されました！");
         await displayDiaries();
+      } else {
+        alert("保存に失敗しました。");
       }
       saveBtn.textContent = "💾 保存して投稿する"; saveBtn.disabled = false;
     };
