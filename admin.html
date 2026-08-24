@@ -88,13 +88,19 @@
           headers: { "X-Master-Key": MASTER_KEY },
           cache: "no-cache"
         });
-        if (!res.ok) return null;
+        if (!res.ok) {
+          alert("読み込みエラー（ステータス: " + res.status + "）\nマスターキーかBin IDを確認してください。");
+          return null;
+        }
         const data = await res.json();
         return data.record.diaries || [];
-      } catch (e) { return null; }
+      } catch (e) {
+        alert("通信エラーが発生しました: " + e.message);
+        return null;
+      }
     }
 
-    // 保存
+    // 保存処理（エラーの詳細をポップアップ表示）
     async function saveDiaries(diaries) {
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
@@ -102,8 +108,16 @@
           headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
           body: JSON.stringify({ diaries: diaries })
         });
-        return res.ok;
-      } catch (e) { return false; }
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          alert("保存失敗エラー（コード: " + res.status + "）\n詳細: " + (errData.message || "鍵かIDが違う可能性があります"));
+          return false;
+        }
+        return true;
+      } catch (e) {
+        alert("保存通信エラー: " + e.message);
+        return false;
+      }
     }
 
     // 最新の一覧表示
@@ -111,7 +125,7 @@
       diaryList.innerHTML = "読み込み中...";
       const diaries = await getDiaries();
       if (!diaries) {
-        diaryList.innerHTML = "<p style='color:red;'>読み込みエラー。マスターキーを確認してください。</p>";
+        diaryList.innerHTML = "<p style='color:red;'>読み込みエラー。鍵やIDを確認してください。</p>";
         return;
       }
       diaryList.innerHTML = diaries.length === 0 ? "<p>投稿された日誌はありません。</p>" : "";
@@ -135,14 +149,17 @@
       });
     }
 
-    // 履歴（過去バージョン）の検索と全表示機能
+    // 履歴検索
     historyBtn.onclick = async () => {
       historyResult.innerHTML = "過去のバックアップを検索中...";
       try {
-        // 1. バージョン一覧を取得
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/versions`, {
           headers: { "X-Master-Key": MASTER_KEY }
         });
+        if (!res.ok) {
+          historyResult.innerHTML = "<p style='color:red;'>履歴の読み込みに失敗しました（ステータス: " + res.status + "）</p>";
+          return;
+        }
         const data = await res.json();
         const versions = data.versions || [];
 
@@ -153,7 +170,6 @@
 
         historyResult.innerHTML = `<p><b>${versions.length}件の過去バックアップが見つかりました！分析中...</b></p>`;
 
-        // 2. 各バージョンの内容を順番に読み込んでチェック
         for (let i = 0; i < versions.length; i++) {
           const v = versions[i];
           const vRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/versions/${v.version}`, {
@@ -164,7 +180,6 @@
 
           const box = document.createElement("div");
           box.className = "history-card";
-          
           let datesText = list.map(d => d.date).join(" , ");
           box.innerHTML = `
             <b>📦 バックアップ #${i + 1} (${list.length}件の日誌)</b><br>
@@ -184,9 +199,8 @@
           box.appendChild(restoreBtn);
           historyResult.appendChild(box);
         }
-
       } catch (e) {
-        historyResult.innerHTML = "<p style='color:red;'>履歴の検索中にエラーが発生しました。</p>";
+        historyResult.innerHTML = "<p style='color:red;'>エラー: " + e.message + "</p>";
       }
     };
 
@@ -195,14 +209,18 @@
       if (!dateInput.value || !contentInput.value) { alert("日付と本文を入力してください！"); return; }
       saveBtn.textContent = "送信中..."; saveBtn.disabled = true;
       const currentList = await getDiaries();
-      if (!currentList) { alert("通信エラーです"); saveBtn.textContent = "💾 保存して投稿する"; saveBtn.disabled = false; return; }
+      if (!currentList) {
+        saveBtn.textContent = "💾 保存して投稿する";
+        saveBtn.disabled = false;
+        return;
+      }
       currentList.unshift({ date: dateInput.value, sales: salesInput.value || 0, content: contentInput.value });
       const success = await saveDiaries(currentList);
       if (success) {
         dateInput.value = ""; salesInput.value = ""; contentInput.value = "";
         alert("安全に公開されました！");
         await displayDiaries();
-      } else { alert("保存に失敗しました"); }
+      }
       saveBtn.textContent = "💾 保存して投稿する"; saveBtn.disabled = false;
     };
 
