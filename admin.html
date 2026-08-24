@@ -46,7 +46,8 @@
   <div id="diary-list">読み込み中...</div>
 
   <script>
-    let BIN_ID = localStorage.getItem("my_new_bin_id");
+    // あきこさん専用の固定IDと鍵（変更されないように直接固定しました）
+    const BIN_ID = "6a8a43f5da38895dfe05659b";
     const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq";
 
     const dateInput = document.querySelector("#diary-date");
@@ -55,6 +56,7 @@
     const saveBtn = document.querySelector("#save-diary-btn");
     const diaryList = document.querySelector("#diary-list");
 
+    // 装飾ボタンの処理
     function insertTag(startTag, endTag) {
       const start = contentInput.selectionStart;
       const end = contentInput.selectionEnd;
@@ -68,85 +70,60 @@
     document.querySelector("#btn-orange").onclick = () => insertTag("<span style='color:orange;'>", "</span>");
     document.querySelector("#btn-big").onclick = () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>");
 
-    // 新規Bin作成関数
-    async function createNewBin(initialData) {
-      const res = await fetch("https://api.jsonbin.io/v3/b", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Master-Key": MASTER_KEY,
-          "X-Bin-Private": "false"
-        },
-        body: JSON.stringify({ diaries: initialData })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        BIN_ID = data.metadata.id;
-        localStorage.setItem("my_new_bin_id", BIN_ID);
-        return true;
-      } else {
-        alert("新規倉庫の作成に失敗しました。");
-        return false;
-      }
-    }
-
-    // データ取得
+    // データ読み込み関数
     async function getDiaries() {
-      if (!BIN_ID) return "NEED_CREATE";
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
           headers: { "X-Master-Key": MASTER_KEY },
           cache: "no-cache"
         });
-        if (res.status === 403 || res.status === 404) return "NEED_CREATE";
-        if (!res.ok) return null;
+        if (!res.ok) return [];
         const data = await res.json();
+        // 過去データが配列表記かオブジェクト表記かに両対応
+        if (Array.isArray(data.record)) return data.record;
         return data.record.diaries || [];
-      } catch (e) { return null; }
+      } catch (e) {
+        return [];
+      }
     }
 
-    // 保存処理
+    // データ保存関数
     async function saveDiaries(diaries) {
-      if (!BIN_ID) return await createNewBin(diaries);
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
+          headers: { 
+            "Content-Type": "application/json", 
+            "X-Master-Key": MASTER_KEY 
+          },
           body: JSON.stringify({ diaries: diaries })
         });
-        if (res.status === 403 || res.status === 404) return await createNewBin(diaries);
         return res.ok;
-      } catch (e) { return false; }
+      } catch (e) {
+        return false;
+      }
     }
 
     // 一覧表示
     async function displayDiaries() {
       diaryList.innerHTML = "読み込み中...";
       const diaries = await getDiaries();
-      if (diaries === "NEED_CREATE") {
-        diaryList.innerHTML = "<p style='color:orange;'>⚠️ まだ日誌が投稿されていません。最初の投稿をしてみてください！</p>";
-        return;
-      }
-      if (!diaries) {
-        diaryList.innerHTML = "<p style='color:red;'>読み込みエラーが発生しました。</p>";
-        return;
-      }
+      
       diaryList.innerHTML = diaries.length === 0 ? "<p>投稿された日誌はありません。</p>" : "";
       diaries.forEach((diary, index) => {
         const card = document.createElement("div");
         card.className = "diary-card";
-        card.innerHTML = `<h4>📅 ${diary.date} （売上: ${diary.sales} 月幣）</h4><p>${diary.content.replace(/\n/g, "<br>")}</p>`;
+        card.innerHTML = `<h4>📅 ${diary.date || "日付なし"} （売上: ${diary.sales || 0} 月幣）</h4><p>${(diary.content || "").replace(/\n/g, "<br>")}</p>`;
+        
         const delBtn = document.createElement("button");
         delBtn.textContent = "🗑️ 削除";
         delBtn.style.cssText = "background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;";
         delBtn.onclick = async () => {
           if (confirm("本当に削除しますか？")) {
-            const currentList = await getDiaries();
-            if (Array.isArray(currentList)) {
-              currentList.splice(index, 1);
-              await saveDiaries(currentList);
-              displayDiaries();
-            }
+            let currentList = await getDiaries();
+            currentList.splice(index, 1);
+            await saveDiaries(currentList);
+            displayDiaries();
           }
         };
         card.appendChild(delBtn);
@@ -154,22 +131,35 @@
       });
     }
 
+    // 保存ボタンの動作
     saveBtn.onclick = async () => {
-      if (!dateInput.value || !contentInput.value) { alert("日付と本文を入力してください！"); return; }
-      saveBtn.textContent = "送信中..."; saveBtn.disabled = true;
+      if (!dateInput.value || !contentInput.value) { 
+        alert("日付と本文を入力してください！"); 
+        return; 
+      }
+      saveBtn.textContent = "送信中..."; 
+      saveBtn.disabled = true;
+
       let currentList = await getDiaries();
-      if (currentList === "NEED_CREATE" || !Array.isArray(currentList)) currentList = [];
-      currentList.unshift({ date: dateInput.value, sales: salesInput.value || 0, content: contentInput.value });
-      
+      currentList.unshift({ 
+        date: dateInput.value, 
+        sales: salesInput.value || 0, 
+        content: contentInput.value 
+      });
+
       const success = await saveDiaries(currentList);
       if (success) {
-        dateInput.value = ""; salesInput.value = ""; contentInput.value = "";
-        alert("【投稿完了】安全に公開されました！");
+        dateInput.value = ""; 
+        salesInput.value = ""; 
+        contentInput.value = "";
+        alert("【保存完了】安全に公開されました！");
         await displayDiaries();
       } else {
-        alert("保存に失敗しました。");
+        alert("保存に失敗しました。少し時間（10秒ほど）をおいて再度お試しください。");
       }
-      saveBtn.textContent = "💾 保存して投稿する"; saveBtn.disabled = false;
+      
+      saveBtn.textContent = "💾 保存して投稿する"; 
+      saveBtn.disabled = false;
     };
 
     displayDiaries();
