@@ -2,34 +2,31 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>【管理用】日誌投稿画面 - 月の影ハンバーガー</title>
+  <title>【管理用】日誌投稿＆復元画面 - 月の影ハンバーガー</title>
   <style>
-    body {
-      font-family: sans-serif;
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 0 10px;
-      background-color: #fff8f0;
-    }
+    body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; background-color: #fff8f0; }
     .form-group { margin-bottom: 15px; }
     label { display: block; font-weight: bold; margin-bottom: 5px; }
-    input[type="date"], input[type="number"], textarea {
-      width: 100%; padding: 8px; box-sizing: border-box;
-    }
+    input[type="date"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; }
     textarea { height: 100px; }
-    button {
-      padding: 10px 20px; font-size: 16px; cursor: pointer;
-    }
-    .diary-card {
-      border: 1px solid #ccc; padding: 15px; margin-bottom: 15px;
-      border-radius: 8px; background-color: #fff;
-    }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    .diary-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; }
+    .history-card { border: 1px dashed #007bff; padding: 10px; margin-bottom: 10px; background-color: #f0f8ff; }
   </style>
 </head>
 <body>
 
-  <h1>🔒 店主専用 日誌管理・投稿画面</h1>
-  <p>※このページはあきこさん専用です。ブックマークしてお使いください。</p>
+  <h1>🔒 店主専用 日誌管理＆データ復元</h1>
+  <p>※このページはあきこさん専用です。</p>
+  <hr>
+
+  <div style="background-color: #e6f3ff; border: 2px solid #007bff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+    <h3>🔎 過去の消えた日誌を探す・復元する</h3>
+    <p>下のボタンを押すと、ネット倉庫に保存されている「過去のバックアップ履歴」をすべて読み込みます！</p>
+    <button id="check-history-btn" style="background-color: #007bff; color: white; border: none; border-radius: 5px;">📜 過去の履歴データを全検索する</button>
+    <div id="history-result" style="margin-top: 15px;"></div>
+  </div>
+
   <hr>
 
   <h2>📝 新しい日誌を書く</h2>
@@ -55,7 +52,7 @@
   <button id="save-diary-btn" style="background-color: #4CAF50; color: white; border: none; border-radius: 5px;">💾 保存して投稿する</button>
 
   <hr>
-  <h2>📂 投稿済み日誌の一覧・管理</h2>
+  <h2>📂 現在公開中の日誌一覧</h2>
   <div id="diary-list">読み込み中...</div>
 
   <script>
@@ -67,8 +64,10 @@
     const contentInput = document.querySelector("#diary-content");
     const saveBtn = document.querySelector("#save-diary-btn");
     const diaryList = document.querySelector("#diary-list");
+    const historyBtn = document.querySelector("#check-history-btn");
+    const historyResult = document.querySelector("#history-result");
 
-    // 装飾ボタンの処理
+    // 装飾ボタン
     function insertTag(startTag, endTag) {
       const start = contentInput.selectionStart;
       const end = contentInput.selectionEnd;
@@ -77,28 +76,25 @@
       contentInput.value = text.substring(0, start) + startTag + selectedText + endTag + text.substring(end);
       contentInput.focus();
     }
-    document.querySelector("#btn-bold").addEventListener("click", () => insertTag("<b>", "</b>"));
-    document.querySelector("#btn-red").addEventListener("click", () => insertTag("<span style='color:red;'>", "</span>"));
-    document.querySelector("#btn-orange").addEventListener("click", () => insertTag("<span style='color:orange;'>", "</span>"));
-    document.querySelector("#btn-big").addEventListener("click", () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>"));
+    document.querySelector("#btn-bold").onclick = () => insertTag("<b>", "</b>");
+    document.querySelector("#btn-red").onclick = () => insertTag("<span style='color:red;'>", "</span>");
+    document.querySelector("#btn-orange").onclick = () => insertTag("<span style='color:orange;'>", "</span>");
+    document.querySelector("#btn-big").onclick = () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>");
 
-    // ネット倉庫からデータを安全に取得する関数
+    // 最新データ取得
     async function getDiaries() {
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
           headers: { "X-Master-Key": MASTER_KEY },
-          cache: "no-cache" // キャッシュ（古いデータ）を残さない設定
+          cache: "no-cache"
         });
-        if (!res.ok) throw new Error("取得失敗");
+        if (!res.ok) return null;
         const data = await res.json();
         return data.record.diaries || [];
-      } catch (e) {
-        console.error(e);
-        return null; // エラー時は null を返す
-      }
+      } catch (e) { return null; }
     }
 
-    // ネット倉庫にデータを保存する関数
+    // 保存
     async function saveDiaries(diaries) {
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
@@ -107,42 +103,28 @@
           body: JSON.stringify({ diaries: diaries })
         });
         return res.ok;
-      } catch (e) {
-        console.error(e);
-        return false;
-      }
+      } catch (e) { return false; }
     }
 
-    // 画面に日誌一覧を表示する関数
+    // 最新の一覧表示
     async function displayDiaries() {
-      diaryList.innerHTML = "最新データを読み込んでいます...";
+      diaryList.innerHTML = "読み込み中...";
       const diaries = await getDiaries();
-      
-      if (diaries === null) {
-        diaryList.innerHTML = "<p style='color:red;'>データの読み込みに失敗しました。マスターキーを確認してください。</p>";
+      if (!diaries) {
+        diaryList.innerHTML = "<p style='color:red;'>読み込みエラー。マスターキーを確認してください。</p>";
         return;
       }
-
-      diaryList.innerHTML = "";
-      if (diaries.length === 0) {
-        diaryList.innerHTML = "<p>投稿された日誌はありません。</p>";
-        return;
-      }
-
+      diaryList.innerHTML = diaries.length === 0 ? "<p>投稿された日誌はありません。</p>" : "";
       diaries.forEach((diary, index) => {
         const card = document.createElement("div");
         card.className = "diary-card";
-        card.innerHTML = `
-          <h4>📅 ${diary.date} （売上: ${diary.sales} 月幣）</h4>
-          <p>${diary.content.replace(/\n/g, "<br>")}</p>
-        `;
+        card.innerHTML = `<h4>📅 ${diary.date} （売上: ${diary.sales} 月幣）</h4><p>${diary.content.replace(/\n/g, "<br>")}</p>`;
         const delBtn = document.createElement("button");
         delBtn.textContent = "🗑️ 削除";
-        delBtn.style.cssText = "background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;";
+        delBtn.style.cssText = "background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px;";
         delBtn.onclick = async () => {
-          if (confirm("本当にこの日誌を削除しますか？")) {
+          if (confirm("本当に削除しますか？")) {
             const currentList = await getDiaries();
-            if (!currentList) { alert("通信エラーが発生しました"); return; }
             currentList.splice(index, 1);
             await saveDiaries(currentList);
             displayDiaries();
@@ -153,50 +135,77 @@
       });
     }
 
-    // 保存ボタンが押されたときの処理
-    saveBtn.onclick = async () => {
-      if (!dateInput.value || !contentInput.value) {
-        alert("日付と本文を入力してください！");
-        return;
+    // 履歴（過去バージョン）の検索と全表示機能
+    historyBtn.onclick = async () => {
+      historyResult.innerHTML = "過去のバックアップを検索中...";
+      try {
+        // 1. バージョン一覧を取得
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/versions`, {
+          headers: { "X-Master-Key": MASTER_KEY }
+        });
+        const data = await res.json();
+        const versions = data.versions || [];
+
+        if (versions.length === 0) {
+          historyResult.innerHTML = "<p>過去の履歴が見つかりませんでした。</p>";
+          return;
+        }
+
+        historyResult.innerHTML = `<p><b>${versions.length}件の過去バックアップが見つかりました！分析中...</b></p>`;
+
+        // 2. 各バージョンの内容を順番に読み込んでチェック
+        for (let i = 0; i < versions.length; i++) {
+          const v = versions[i];
+          const vRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/versions/${v.version}`, {
+            headers: { "X-Master-Key": MASTER_KEY }
+          });
+          const vData = await vRes.json();
+          const list = vData.record.diaries || [];
+
+          const box = document.createElement("div");
+          box.className = "history-card";
+          
+          let datesText = list.map(d => d.date).join(" , ");
+          box.innerHTML = `
+            <b>📦 バックアップ #${i + 1} (${list.length}件の日誌)</b><br>
+            <small>含まれる日付: ${datesText || "なし"}</small><br>
+          `;
+
+          const restoreBtn = document.createElement("button");
+          restoreBtn.textContent = "🔄 この状態に戻す（復元）";
+          restoreBtn.style.cssText = "margin-top:5px; background:#007bff; color:white; border:none; padding:3px 8px; border-radius:3px;";
+          restoreBtn.onclick = async () => {
+            if (confirm(`このバックアップ（${list.length}件データ）で現在の日誌を上書き復元しますか？`)) {
+              await saveDiaries(list);
+              alert("復元が完了しました！");
+              displayDiaries();
+            }
+          };
+          box.appendChild(restoreBtn);
+          historyResult.appendChild(box);
+        }
+
+      } catch (e) {
+        historyResult.innerHTML = "<p style='color:red;'>履歴の検索中にエラーが発生しました。</p>";
       }
-
-      saveBtn.textContent = "送信中...";
-      saveBtn.disabled = true;
-
-      // 1. 保存前に必ずネットから最新のリストを取得する
-      const currentList = await getDiaries();
-      if (currentList === null) {
-        alert("ネット倉庫との通信に失敗しました。投稿を中止します。");
-        saveBtn.textContent = "💾 保存して投稿する";
-        saveBtn.disabled = false;
-        return;
-      }
-
-      // 2. 新しい日誌を一番上に追加する
-      currentList.unshift({
-        date: dateInput.value,
-        sales: salesInput.value || 0,
-        content: contentInput.value
-      });
-
-      // 3. ネット倉庫に保存する
-      const success = await saveDiaries(currentList);
-
-      if (success) {
-        dateInput.value = "";
-        salesInput.value = "";
-        contentInput.value = "";
-        alert("安全に公開されました！");
-        await displayDiaries(); // 一覧を再読み込みして確認
-      } else {
-        alert("保存に失敗しました。もう一度お試しください。");
-      }
-
-      saveBtn.textContent = "💾 保存して投稿する";
-      saveBtn.disabled = false;
     };
 
-    // 初期表示
+    // 保存ボタン
+    saveBtn.onclick = async () => {
+      if (!dateInput.value || !contentInput.value) { alert("日付と本文を入力してください！"); return; }
+      saveBtn.textContent = "送信中..."; saveBtn.disabled = true;
+      const currentList = await getDiaries();
+      if (!currentList) { alert("通信エラーです"); saveBtn.textContent = "💾 保存して投稿する"; saveBtn.disabled = false; return; }
+      currentList.unshift({ date: dateInput.value, sales: salesInput.value || 0, content: contentInput.value });
+      const success = await saveDiaries(currentList);
+      if (success) {
+        dateInput.value = ""; salesInput.value = ""; contentInput.value = "";
+        alert("安全に公開されました！");
+        await displayDiaries();
+      } else { alert("保存に失敗しました"); }
+      saveBtn.textContent = "💾 保存して投稿する"; saveBtn.disabled = false;
+    };
+
     displayDiaries();
   </script>
 </body>
