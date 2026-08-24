@@ -11,6 +11,7 @@
     textarea { height: 100px; }
     button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
     .diary-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; }
+    .info-box { background-color: #e6f3ff; border: 2px solid #007bff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
   </style>
 </head>
 <body>
@@ -18,6 +19,12 @@
   <h1>🔒 店主専用 日誌管理・投稿画面</h1>
   <p>※このページはあきこさん専用です。</p>
   <hr>
+
+  <div class="info-box">
+    <h3>🔑 現在のデータ倉庫（Bin ID）確認</h3>
+    <button id="show-bin-id-btn" style="background-color: #007bff; color: white; border: none; border-radius: 5px; padding: 8px 15px;">🔍 Bin IDを表示する</button>
+    <p id="bin-id-display" style="margin-top: 10px; font-weight: bold; color: #d9534f;"></p>
+  </div>
 
   <h2>📝 新しい日誌を書く</h2>
   <div class="form-group">
@@ -46,7 +53,6 @@
   <div id="diary-list">読み込み中...</div>
 
   <script>
-    // LocalStorageからBin IDを取得。なければ新規作成用の設定
     let BIN_ID = localStorage.getItem("my_new_bin_id") || "6a8a43f5da38895dfe05659b";
     const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq";
 
@@ -55,6 +61,14 @@
     const contentInput = document.querySelector("#diary-content");
     const saveBtn = document.querySelector("#save-diary-btn");
     const diaryList = document.querySelector("#diary-list");
+    const showBinBtn = document.querySelector("#show-bin-id-btn");
+    const binDisplay = document.querySelector("#bin-id-display");
+
+    // Bin ID 表示ボタンの処理
+    showBinBtn.onclick = () => {
+      const currentBin = localStorage.getItem("my_new_bin_id") || BIN_ID;
+      binDisplay.textContent = "現在のBin ID: " + currentBin;
+    };
 
     // 装飾ボタン
     function insertTag(startTag, endTag) {
@@ -85,10 +99,9 @@
         const data = await res.json();
         BIN_ID = data.metadata.id;
         localStorage.setItem("my_new_bin_id", BIN_ID);
-        alert("新しい専用データ倉庫を作成しました！\n新しいBin ID: " + BIN_ID + "\n（※このIDをメモして教えていただければdiary.html側も繋ぎ直せます！）");
         return true;
       } else {
-        alert("新しい倉庫の作成に失敗しました。マスターキー自体が無効な可能性があります。");
+        alert("新しい倉庫の作成に失敗しました。");
         return false;
       }
     }
@@ -101,7 +114,6 @@
           cache: "no-cache"
         });
         if (res.status === 403 || res.status === 404) {
-          // 403エラーなら新規作成を促す
           return "NEED_CREATE";
         }
         if (!res.ok) return null;
@@ -121,7 +133,6 @@
           body: JSON.stringify({ diaries: diaries })
         });
         if (res.status === 403) {
-          // 403の場合は新しい倉庫を作成して保存
           return await createNewBin(diaries);
         }
         return res.ok;
@@ -135,7 +146,7 @@
       diaryList.innerHTML = "読み込み中...";
       const diaries = await getDiaries();
       if (diaries === "NEED_CREATE") {
-        diaryList.innerHTML = "<p style='color:orange;'>⚠️ 現在の鍵で新しい倉庫を自動作成します。上のフォームから最初の投稿を試してください！</p>";
+        diaryList.innerHTML = "<p style='color:orange;'>⚠️ 上のフォームから投稿を試してください。</p>";
         return;
       }
       if (!diaries) {
@@ -180,7 +191,7 @@
       const success = await saveDiaries(currentList);
       if (success) {
         dateInput.value = ""; salesInput.value = ""; contentInput.value = "";
-        alert("安全に保存されました！");
+        alert("安全に公開されました！");
         await displayDiaries();
       } else {
         alert("保存に失敗しました。");
