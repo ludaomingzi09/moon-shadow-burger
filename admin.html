@@ -9,7 +9,7 @@
       max-width: 600px;
       margin: 20px auto;
       padding: 0 10px;
-      background-color: #fff8f0; /* 管理画面だと分かりやすい色 */
+      background-color: #fff8f0;
     }
     .form-group { margin-bottom: 15px; }
     label { display: block; font-weight: bold; margin-bottom: 5px; }
@@ -55,7 +55,7 @@
   <button id="save-diary-btn" style="background-color: #4CAF50; color: white; border: none; border-radius: 5px;">💾 保存して投稿する</button>
 
   <hr>
-  <h2>📂 投稿済み日誌の管理（削除）</h2>
+  <h2>📂 投稿済み日誌の一覧・管理</h2>
   <div id="diary-list">読み込み中...</div>
 
   <script>
@@ -82,30 +82,53 @@
     document.querySelector("#btn-orange").addEventListener("click", () => insertTag("<span style='color:orange;'>", "</span>"));
     document.querySelector("#btn-big").addEventListener("click", () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>"));
 
+    // ネット倉庫からデータを安全に取得する関数
     async function getDiaries() {
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-        headers: { "X-Master-Key": MASTER_KEY }
-      });
-      const data = await res.json();
-      return data.record.diaries || [];
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+          headers: { "X-Master-Key": MASTER_KEY },
+          cache: "no-cache" // キャッシュ（古いデータ）を残さない設定
+        });
+        if (!res.ok) throw new Error("取得失敗");
+        const data = await res.json();
+        return data.record.diaries || [];
+      } catch (e) {
+        console.error(e);
+        return null; // エラー時は null を返す
+      }
     }
 
+    // ネット倉庫にデータを保存する関数
     async function saveDiaries(diaries) {
-      await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
-        body: JSON.stringify({ diaries: diaries })
-      });
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
+          body: JSON.stringify({ diaries: diaries })
+        });
+        return res.ok;
+      } catch (e) {
+        console.error(e);
+        return false;
+      }
     }
 
+    // 画面に日誌一覧を表示する関数
     async function displayDiaries() {
-      diaryList.innerHTML = "読み込み中...";
+      diaryList.innerHTML = "最新データを読み込んでいます...";
       const diaries = await getDiaries();
+      
+      if (diaries === null) {
+        diaryList.innerHTML = "<p style='color:red;'>データの読み込みに失敗しました。マスターキーを確認してください。</p>";
+        return;
+      }
+
       diaryList.innerHTML = "";
       if (diaries.length === 0) {
         diaryList.innerHTML = "<p>投稿された日誌はありません。</p>";
         return;
       }
+
       diaries.forEach((diary, index) => {
         const card = document.createElement("div");
         card.className = "diary-card";
@@ -117,10 +140,11 @@
         delBtn.textContent = "🗑️ 削除";
         delBtn.style.cssText = "background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;";
         delBtn.onclick = async () => {
-          if (confirm("本当に削除しますか？")) {
-            const list = await getDiaries();
-            list.splice(index, 1);
-            await saveDiaries(list);
+          if (confirm("本当にこの日誌を削除しますか？")) {
+            const currentList = await getDiaries();
+            if (!currentList) { alert("通信エラーが発生しました"); return; }
+            currentList.splice(index, 1);
+            await saveDiaries(currentList);
             displayDiaries();
           }
         };
@@ -129,25 +153,50 @@
       });
     }
 
+    // 保存ボタンが押されたときの処理
     saveBtn.onclick = async () => {
       if (!dateInput.value || !contentInput.value) {
         alert("日付と本文を入力してください！");
         return;
       }
+
       saveBtn.textContent = "送信中...";
       saveBtn.disabled = true;
 
-      const list = await getDiaries();
-      list.unshift({ date: dateInput.value, sales: salesInput.value || 0, content: contentInput.value });
-      await saveDiaries(list);
+      // 1. 保存前に必ずネットから最新のリストを取得する
+      const currentList = await getDiaries();
+      if (currentList === null) {
+        alert("ネット倉庫との通信に失敗しました。投稿を中止します。");
+        saveBtn.textContent = "💾 保存して投稿する";
+        saveBtn.disabled = false;
+        return;
+      }
 
-      dateInput.value = ""; salesInput.value = ""; contentInput.value = "";
+      // 2. 新しい日誌を一番上に追加する
+      currentList.unshift({
+        date: dateInput.value,
+        sales: salesInput.value || 0,
+        content: contentInput.value
+      });
+
+      // 3. ネット倉庫に保存する
+      const success = await saveDiaries(currentList);
+
+      if (success) {
+        dateInput.value = "";
+        salesInput.value = "";
+        contentInput.value = "";
+        alert("安全に公開されました！");
+        await displayDiaries(); // 一覧を再読み込みして確認
+      } else {
+        alert("保存に失敗しました。もう一度お試しください。");
+      }
+
       saveBtn.textContent = "💾 保存して投稿する";
       saveBtn.disabled = false;
-      alert("公開しました！");
-      displayDiaries();
     };
 
+    // 初期表示
     displayDiaries();
   </script>
 </body>
