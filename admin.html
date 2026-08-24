@@ -46,7 +46,7 @@
   <div id="diary-list">読み込み中...</div>
 
   <script>
-    let BIN_ID = localStorage.getItem("my_new_bin_id") || "6a8a43f5da38895dfe05659b";
+    let BIN_ID = localStorage.getItem("my_new_bin_id");
     const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq";
 
     const dateInput = document.querySelector("#diary-date");
@@ -68,6 +68,7 @@
     document.querySelector("#btn-orange").onclick = () => insertTag("<span style='color:orange;'>", "</span>");
     document.querySelector("#btn-big").onclick = () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>");
 
+    // 新規Bin作成関数
     async function createNewBin(initialData) {
       const res = await fetch("https://api.jsonbin.io/v3/b", {
         method: "POST",
@@ -84,11 +85,14 @@
         localStorage.setItem("my_new_bin_id", BIN_ID);
         return true;
       } else {
+        alert("新規倉庫の作成に失敗しました。");
         return false;
       }
     }
 
+    // データ取得
     async function getDiaries() {
+      if (!BIN_ID) return "NEED_CREATE";
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
           headers: { "X-Master-Key": MASTER_KEY },
@@ -101,23 +105,26 @@
       } catch (e) { return null; }
     }
 
+    // 保存処理
     async function saveDiaries(diaries) {
+      if (!BIN_ID) return await createNewBin(diaries);
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
           body: JSON.stringify({ diaries: diaries })
         });
-        if (res.status === 403) return await createNewBin(diaries);
+        if (res.status === 403 || res.status === 404) return await createNewBin(diaries);
         return res.ok;
       } catch (e) { return false; }
     }
 
+    // 一覧表示
     async function displayDiaries() {
       diaryList.innerHTML = "読み込み中...";
       const diaries = await getDiaries();
       if (diaries === "NEED_CREATE") {
-        diaryList.innerHTML = "<p style='color:orange;'>⚠️ 日誌を投稿すると自動的に新しいデータ倉庫が準備されます。</p>";
+        diaryList.innerHTML = "<p style='color:orange;'>⚠️ まだ日誌が投稿されていません。最初の投稿をしてみてください！</p>";
         return;
       }
       if (!diaries) {
@@ -153,16 +160,15 @@
       let currentList = await getDiaries();
       if (currentList === "NEED_CREATE" || !Array.isArray(currentList)) currentList = [];
       currentList.unshift({ date: dateInput.value, sales: salesInput.value || 0, content: contentInput.value });
+      
       const success = await saveDiaries(currentList);
       if (success) {
         dateInput.value = ""; salesInput.value = ""; contentInput.value = "";
-        
-        // ★保存成功時にBin IDを直接ポップアップ表示します！
-        const activeBinId = localStorage.getItem("my_new_bin_id") || BIN_ID;
-        alert("【安全に公開されました！】\n\n現在のBin ID:\n" + activeBinId);
-        
+        alert("【投稿完了】安全に公開されました！");
         await displayDiaries();
-      } else { alert("保存に失敗しました。"); }
+      } else {
+        alert("保存に失敗しました。");
+      }
       saveBtn.textContent = "💾 保存して投稿する"; saveBtn.disabled = false;
     };
 
