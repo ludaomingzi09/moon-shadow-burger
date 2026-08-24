@@ -57,7 +57,7 @@
 
   <script>
     const BIN_ID = "6a8a43f5da38895dfe05659b";
-    const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq"; // ★あきこさんのマスターキーに書き換えてください
+    const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq";
 
     const dateInput = document.querySelector("#diary-date");
     const salesInput = document.querySelector("#diary-sales");
@@ -89,18 +89,18 @@
           cache: "no-cache"
         });
         if (!res.ok) {
-          alert("読み込みエラー（ステータス: " + res.status + "）\nマスターキーかBin IDを確認してください。");
+          alert("【エラー】読み込み失敗（コード: " + res.status + "）\nキーかBIN_IDを確認してください。");
           return null;
         }
         const data = await res.json();
         return data.record.diaries || [];
       } catch (e) {
-        alert("通信エラーが発生しました: " + e.message);
+        alert("【通信エラー】 " + e.message);
         return null;
       }
     }
 
-    // 保存処理（エラーの詳細をポップアップ表示）
+    // 保存処理
     async function saveDiaries(diaries) {
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
@@ -110,12 +110,12 @@
         });
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          alert("保存失敗エラー（コード: " + res.status + "）\n詳細: " + (errData.message || "鍵かIDが違う可能性があります"));
+          alert("【保存エラー】（コード: " + res.status + "）\n詳細: " + (errData.message || "送信に失敗しました"));
           return false;
         }
         return true;
       } catch (e) {
-        alert("保存通信エラー: " + e.message);
+        alert("【通信エラー】 " + e.message);
         return false;
       }
     }
@@ -125,7 +125,7 @@
       diaryList.innerHTML = "読み込み中...";
       const diaries = await getDiaries();
       if (!diaries) {
-        diaryList.innerHTML = "<p style='color:red;'>読み込みエラー。鍵やIDを確認してください。</p>";
+        diaryList.innerHTML = "<p style='color:red;'>データの読み込みに失敗しました。</p>";
         return;
       }
       diaryList.innerHTML = diaries.length === 0 ? "<p>投稿された日誌はありません。</p>" : "";
@@ -135,7 +135,7 @@
         card.innerHTML = `<h4>📅 ${diary.date} （売上: ${diary.sales} 月幣）</h4><p>${diary.content.replace(/\n/g, "<br>")}</p>`;
         const delBtn = document.createElement("button");
         delBtn.textContent = "🗑️ 削除";
-        delBtn.style.cssText = "background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px;";
+        delBtn.style.cssText = "background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;";
         delBtn.onclick = async () => {
           if (confirm("本当に削除しますか？")) {
             const currentList = await getDiaries();
@@ -157,7 +157,7 @@
           headers: { "X-Master-Key": MASTER_KEY }
         });
         if (!res.ok) {
-          historyResult.innerHTML = "<p style='color:red;'>履歴の読み込みに失敗しました（ステータス: " + res.status + "）</p>";
+          historyResult.innerHTML = "<p style='color:red;'>履歴読み込み失敗（コード: " + res.status + "）</p>";
           return;
         }
         const data = await res.json();
@@ -188,7 +188,7 @@
 
           const restoreBtn = document.createElement("button");
           restoreBtn.textContent = "🔄 この状態に戻す（復元）";
-          restoreBtn.style.cssText = "margin-top:5px; background:#007bff; color:white; border:none; padding:3px 8px; border-radius:3px;";
+          restoreBtn.style.cssText = "margin-top:5px; background:#007bff; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer;";
           restoreBtn.onclick = async () => {
             if (confirm(`このバックアップ（${list.length}件データ）で現在の日誌を上書き復元しますか？`)) {
               await saveDiaries(list);
