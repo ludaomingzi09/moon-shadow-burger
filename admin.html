@@ -16,7 +16,7 @@
 <body>
 
   <h1>🔒 店主専用 日誌管理・投稿画面</h1>
-  <p>※このページはあきこさん専用です。</p>
+  <p>※このページはあきこさん専用です。（Googleスプレッドシート連携版）</p>
   <hr>
 
   <h2>📝 新しい日誌を書く</h2>
@@ -29,14 +29,14 @@
     <input type="number" id="diary-sales" placeholder="例: 12000">
   </div>
   <div class="form-group">
-    <label>メモ・出来事（長文対応）：</label>
+    <label>メモ・出来事（無制限長文対応）：</label>
     <div style="margin-bottom: 5px;">
       <button type="button" id="btn-bold"><b>太字</b></button>
       <button type="button" id="btn-red" style="color:red;">赤字</button>
       <button type="button" id="btn-orange" style="color:orange;">オレンジ字</button>
       <button type="button" id="btn-big">大文字</button>
     </div>
-    <textarea id="diary-content" placeholder="1000行以上の長文でもそのまま貼り付けて保存できます！"></textarea>
+    <textarea id="diary-content" placeholder="どれだけ長い文章でも保存できます！"></textarea>
   </div>
 
   <button id="save-diary-btn" style="background-color: #4CAF50; color: white; border: none; border-radius: 5px;">💾 保存して投稿する</button>
@@ -46,8 +46,8 @@
   <div id="diary-list">読み込み中...</div>
 
   <script>
-    const BIN_ID = "6a8a43f5da38895dfe05659b";
-    const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq";
+    // ★Step 2で発行されたGoogleのウェブアプリURLをここに貼り付けます
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzO8d8v49ZJw1ms7v7nOKGjuVSXM5_k9COs_AGcYgLKEh_zUddDNU98n68daqHBbpE5eA/exec";
 
     const dateInput = document.querySelector("#diary-date");
     const salesInput = document.querySelector("#diary-sales");
@@ -68,101 +68,52 @@
     document.querySelector("#btn-orange").onclick = () => insertTag("<span style='color:orange;'>", "</span>");
     document.querySelector("#btn-big").onclick = () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>");
 
-    // データ取得
-    async function getDiaries() {
-      try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-          headers: { "X-Master-Key": MASTER_KEY },
-          cache: "no-cache"
-        });
-        if (!res.ok) return [];
-        const data = await res.json();
-        if (Array.isArray(data.record)) return data.record;
-        return data.record.diaries || [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    // データ保存（長文・大容量安全処理）
-    async function saveDiaries(diaries) {
-      try {
-        const payload = JSON.stringify({ diaries: diaries });
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-          method: "PUT",
-          headers: { 
-            "Content-Type": "application/json", 
-            "X-Master-Key": MASTER_KEY 
-          },
-          body: payload
-        });
-        return res.ok;
-      } catch (e) {
-        return false;
-      }
-    }
-
-    // 一覧表示
     async function displayDiaries() {
       diaryList.innerHTML = "読み込み中...";
-      const diaries = await getDiaries();
-      
-      diaryList.innerHTML = diaries.length === 0 ? "<p>投稿された日誌はありません。</p>" : "";
-      diaries.forEach((diary, index) => {
-        const card = document.createElement("div");
-        card.className = "diary-card";
-        card.innerHTML = `<h4>📅 ${diary.date || "日付なし"} （売上: ${diary.sales || 0} 月幣）</h4><p>${(diary.content || "").replace(/\n/g, "<br>")}</p>`;
+      try {
+        const res = await fetch(GAS_URL);
+        const diaries = await res.json();
         
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "🗑️ 削除";
-        delBtn.style.cssText = "background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;";
-        delBtn.onclick = async () => {
-          if (confirm("本当に削除しますか？")) {
-            let currentList = await getDiaries();
-            currentList.splice(index, 1);
-            await saveDiaries(currentList);
-            displayDiaries();
-          }
-        };
-        card.appendChild(delBtn);
-        diaryList.appendChild(card);
-      });
+        diaryList.innerHTML = diaries.length === 0 ? "<p>投稿された日誌はありません。</p>" : "";
+        diaries.forEach((diary) => {
+          const card = document.createElement("div");
+          card.className = "diary-card";
+          card.innerHTML = `<h4>📅 ${diary.date || "日付なし"} （売上: ${diary.sales || 0} 月幣）</h4><p>${(diary.content || "").replace(/\n/g, "<br>")}</p>`;
+          diaryList.appendChild(card);
+        });
+      } catch (e) {
+        diaryList.innerHTML = "<p style='color:red;'>データの読み込みに失敗しました。</p>";
+      }
     }
 
-    // 保存ボタンの動作（長文対応）
     saveBtn.onclick = async () => {
       if (!dateInput.value || !contentInput.value) { 
         alert("日付と本文を入力してください！"); 
         return; 
       }
       
-      saveBtn.textContent = "長文データを送信中（数秒かかります）..."; 
+      saveBtn.textContent = "Googleスプレッドシートへ送信中..."; 
       saveBtn.disabled = true;
 
       try {
-        let currentList = await getDiaries();
-        
-        // 長文テキストのクレンジング（文字化け・エラー原因となる特殊コードを除去）
-        const rawContent = contentInput.value;
-        
-        currentList.unshift({ 
-          date: dateInput.value, 
-          sales: salesInput.value || 0, 
-          content: rawContent 
+        const payload = {
+          date: dateInput.value,
+          sales: salesInput.value || 0,
+          content: contentInput.value
+        };
+
+        await fetch(GAS_URL, {
+          method: "POST",
+          body: JSON.stringify(payload)
         });
 
-        const success = await saveDiaries(currentList);
-        if (success) {
-          dateInput.value = ""; 
-          salesInput.value = ""; 
-          contentInput.value = "";
-          alert("【保存完了】1000行以上の超長文も安全に公開されました！");
-          await displayDiaries();
-        } else {
-          alert("JSONBin（無料データ倉庫）の1回の最大サイズ上限を超えてしまった可能性があります。\nもしエラーが続く場合は、数か月分ごとに分けて投稿するか、ご相談ください！");
-        }
+        dateInput.value = ""; 
+        salesInput.value = ""; 
+        contentInput.value = "";
+        alert("【保存完了】Googleスプレッドシートに超長文が安全に保存・公開されました！");
+        await displayDiaries();
       } catch (e) {
-        alert("通信中にエラーが発生しました。");
+        alert("送信エラーが発生しました。");
       }
       
       saveBtn.textContent = "💾 保存して投稿する"; 

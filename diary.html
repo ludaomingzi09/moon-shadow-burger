@@ -2,79 +2,48 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>業務日誌 - 月の影ハンバーガー</title>
+  <title>店主日誌 - 月の影ハンバーガー</title>
   <style>
-    body {
-      font-family: sans-serif;
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 0 10px;
-      background-color: #f9f9f9;
-    }
-    h1 {
-      border-bottom: 2px solid #333;
-      padding-bottom: 10px;
-    }
-    .diary-card {
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    a {
-      color: #0066cc;
-      text-decoration: none;
-    }
+    body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; background-color: #fff8f0; }
+    .diary-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; }
   </style>
 </head>
 <body>
 
-  <p><a href="index.html">← トップページへ戻る</a></p>
-  <h1>📖 月の影ハンバーガー 業務日誌</h1>
+  <h1>📖 店主日誌</h1>
+  <p>月の影ハンバーガー店主の日常・開店記録です。</p>
+  <hr>
 
-  <!-- 日誌が並ぶエリア -->
-  <div id="diary-list">
-    <p>日誌を読み込んでいます...</p>
-  </div>
+  <div id="diary-list">読み込み中...</div>
 
   <script>
-    const BIN_ID = "6a8a43f5da38895dfe05659b";
-    const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq"; // ★あきこさんのマスターキーに書き換えてください
-
+    // ★Step 2で発行されたGoogleのウェブアプリURLをここに貼り付けます
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzO8d8v49ZJw1ms7v7nOKGjuVSXM5_k9COs_AGcYgLKEh_zUddDNU98n68daqHBbpE5eA/exec";
     const diaryList = document.querySelector("#diary-list");
 
-    async function loadDiaries() {
+    async function loadPublicDiaries() {
       try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-          headers: { "X-Master-Key": MASTER_KEY }
-        });
-        const data = await res.json();
-        const diaries = data.record.diaries || [];
+        const res = await fetch(GAS_URL);
+        const diaries = await res.json();
 
-        diaryList.innerHTML = "";
-        if (diaries.length === 0) {
-          diaryList.innerHTML = "<p>まだ公開された日誌はありません。</p>";
+        if (!diaries || diaries.length === 0) {
+          diaryList.innerHTML = "<p>投稿された日誌はありません。</p>";
           return;
         }
 
+        diaryList.innerHTML = "";
         diaries.forEach(diary => {
           const card = document.createElement("div");
           card.className = "diary-card";
-          card.innerHTML = `
-            <h4>📅 日付：${diary.date}</h4>
-            <p>💰 本日の売上：<strong>${diary.sales}</strong> 月幣</p>
-            <p>📝 <strong>メモ・出来事：</strong><br>${diary.content.replace(/\n/g, "<br>")}</p>
-          `;
+          card.innerHTML = `<h3>📅 ${diary.date || "日付なし"}</h3><p>💰 本日の売上: ${diary.sales || 0} 月幣</p><hr><p>${(diary.content || "").replace(/\n/g, "<br>")}</p>`;
           diaryList.appendChild(card);
         });
-      } catch (error) {
-        diaryList.innerHTML = "<p>日誌の読み込みに失敗しました。</p>";
+      } catch (e) {
+        diaryList.innerHTML = "<p>通信エラーが発生しました。</p>";
       }
     }
 
-    loadDiaries();
+    loadPublicDiaries();
   </script>
 </body>
 </html>
