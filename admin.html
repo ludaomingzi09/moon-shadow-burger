@@ -8,7 +8,7 @@
     .form-group { margin-bottom: 15px; }
     label { display: block; font-weight: bold; margin-bottom: 5px; }
     input[type="date"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; }
-    textarea { height: 200px; }
+    textarea { height: 180px; }
     button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
     .diary-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; max-height: 300px; overflow-y: auto; }
   </style>
@@ -16,7 +16,7 @@
 <body>
 
   <h1>🔒 店主専用 日誌管理・投稿画面</h1>
-  <p>※このページはあきこさん専用です。（Googleスプレッドシート連携版）</p>
+  <p>※このページはあきこさん専用です。</p>
   <hr>
 
   <h2>📝 新しい日誌を書く</h2>
@@ -29,7 +29,7 @@
     <input type="number" id="diary-sales" placeholder="例: 12000">
   </div>
   <div class="form-group">
-    <label>メモ・出来事（無制限長文対応）：</label>
+    <label>メモ・出来事（1000行以上の超長文対応）：</label>
     <div style="margin-bottom: 5px;">
       <button type="button" id="btn-bold"><b>太字</b></button>
       <button type="button" id="btn-red" style="color:red;">赤字</button>
@@ -46,8 +46,7 @@
   <div id="diary-list">読み込み中...</div>
 
   <script>
-    // ★Step 2で発行されたGoogleのウェブアプリURLをここに貼り付けます
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzO8d8v49ZJw1ms7v7nOKGjuVSXM5_k9COs_AGcYgLKEh_zUddDNU98n68daqHBbpE5eA/exec";
+    const GAS_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // ※発行されたGASのURLがある場合はここに指定
 
     const dateInput = document.querySelector("#diary-date");
     const salesInput = document.querySelector("#diary-sales");
@@ -74,15 +73,23 @@
         const res = await fetch(GAS_URL);
         const diaries = await res.json();
         
-        diaryList.innerHTML = diaries.length === 0 ? "<p>投稿された日誌はありません。</p>" : "";
-        diaries.forEach((diary) => {
+        // ヘッダー行や無効データを除外フィルタリング
+        const validDiaries = diaries.filter(d => d.date && d.date !== "date" && d.content !== "content");
+
+        if (validDiaries.length === 0) {
+          diaryList.innerHTML = "<p>投稿された日誌はありません。</p>";
+          return;
+        }
+
+        diaryList.innerHTML = "";
+        validDiaries.forEach((diary) => {
           const card = document.createElement("div");
           card.className = "diary-card";
-          card.innerHTML = `<h4>📅 ${diary.date || "日付なし"} （売上: ${diary.sales || 0} 月幣）</h4><p>${(diary.content || "").replace(/\n/g, "<br>")}</p>`;
+          card.innerHTML = `<h4>📅 ${diary.date} （売上: ${diary.sales || 0} 月幣）</h4><p>${(diary.content || "").replace(/\n/g, "<br>")}</p>`;
           diaryList.appendChild(card);
         });
       } catch (e) {
-        diaryList.innerHTML = "<p style='color:red;'>データの読み込みに失敗しました。</p>";
+        diaryList.innerHTML = "<p style='color:red;'>データの読み込みに失敗しました。設定を確認してください。</p>";
       }
     }
 
@@ -92,7 +99,7 @@
         return; 
       }
       
-      saveBtn.textContent = "Googleスプレッドシートへ送信中..."; 
+      saveBtn.textContent = "送信中..."; 
       saveBtn.disabled = true;
 
       try {
@@ -104,14 +111,16 @@
 
         await fetch(GAS_URL, {
           method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
 
         dateInput.value = ""; 
         salesInput.value = ""; 
         contentInput.value = "";
-        alert("【保存完了】Googleスプレッドシートに超長文が安全に保存・公開されました！");
-        await displayDiaries();
+        alert("【保存完了】安全に保存・公開されました！");
+        setTimeout(displayDiaries, 1500);
       } catch (e) {
         alert("送信エラーが発生しました。");
       }

@@ -17,8 +17,7 @@
   <div id="diary-list">読み込み中...</div>
 
   <script>
-    // ★Step 2で発行されたGoogleのウェブアプリURLをここに貼り付けます
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzO8d8v49ZJw1ms7v7nOKGjuVSXM5_k9COs_AGcYgLKEh_zUddDNU98n68daqHBbpE5eA/exec";
+    const GAS_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // ※発行されたGASのURLがある場合はここに指定
     const diaryList = document.querySelector("#diary-list");
 
     async function loadPublicDiaries() {
@@ -26,16 +25,19 @@
         const res = await fetch(GAS_URL);
         const diaries = await res.json();
 
-        if (!diaries || diaries.length === 0) {
+        // ヘッダー行や無効データを除外フィルタリング
+        const validDiaries = diaries.filter(d => d.date && d.date !== "date" && d.content !== "content");
+
+        if (!validDiaries || validDiaries.length === 0) {
           diaryList.innerHTML = "<p>投稿された日誌はありません。</p>";
           return;
         }
 
         diaryList.innerHTML = "";
-        diaries.forEach(diary => {
+        validDiaries.forEach(diary => {
           const card = document.createElement("div");
           card.className = "diary-card";
-          card.innerHTML = `<h3>📅 ${diary.date || "日付なし"}</h3><p>💰 本日の売上: ${diary.sales || 0} 月幣</p><hr><p>${(diary.content || "").replace(/\n/g, "<br>")}</p>`;
+          card.innerHTML = `<h3>📅 ${diary.date}</h3><p>💰 本日の売上: ${diary.sales || 0} 月幣</p><hr><p>${(diary.content || "").replace(/\n/g, "<br>")}</p>`;
           diaryList.appendChild(card);
         });
       } catch (e) {
