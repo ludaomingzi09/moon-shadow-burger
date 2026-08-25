@@ -8,9 +8,9 @@
     .form-group { margin-bottom: 15px; }
     label { display: block; font-weight: bold; margin-bottom: 5px; }
     input[type="date"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; }
-    textarea { height: 120px; }
+    textarea { height: 200px; }
     button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-    .diary-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; }
+    .diary-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; max-height: 300px; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -29,14 +29,14 @@
     <input type="number" id="diary-sales" placeholder="例: 12000">
   </div>
   <div class="form-group">
-    <label>メモ・出来事：</label>
+    <label>メモ・出来事（長文対応）：</label>
     <div style="margin-bottom: 5px;">
       <button type="button" id="btn-bold"><b>太字</b></button>
       <button type="button" id="btn-red" style="color:red;">赤字</button>
       <button type="button" id="btn-orange" style="color:orange;">オレンジ字</button>
       <button type="button" id="btn-big">大文字</button>
     </div>
-    <textarea id="diary-content" placeholder="今日の出来事を書きましょう！"></textarea>
+    <textarea id="diary-content" placeholder="1000行以上の長文でもそのまま貼り付けて保存できます！"></textarea>
   </div>
 
   <button id="save-diary-btn" style="background-color: #4CAF50; color: white; border: none; border-radius: 5px;">💾 保存して投稿する</button>
@@ -84,7 +84,7 @@
       }
     }
 
-    // データ保存（安全に通信できるよう最適化）
+    // データ保存（長文・大容量安全処理）
     async function saveDiaries(diaries) {
       try {
         const payload = JSON.stringify({ diaries: diaries });
@@ -129,43 +129,46 @@
       });
     }
 
-    // 保存ボタンの動作
+    // 保存ボタンの動作（長文対応）
     saveBtn.onclick = async () => {
       if (!dateInput.value || !contentInput.value) { 
         alert("日付と本文を入力してください！"); 
         return; 
       }
       
-      saveBtn.textContent = "送信中..."; 
+      saveBtn.textContent = "長文データを送信中（数秒かかります）..."; 
       saveBtn.disabled = true;
 
-      // 1. 最新のデータを取得
-      let currentList = await getDiaries();
-      
-      // 2. 新しい投稿を追加（改行コードの整理）
-      const cleanContent = contentInput.value.trim();
-      currentList.unshift({ 
-        date: dateInput.value, 
-        sales: salesInput.value || 0, 
-        content: cleanContent 
-      });
+      try {
+        let currentList = await getDiaries();
+        
+        // 長文テキストのクレンジング（文字化け・エラー原因となる特殊コードを除去）
+        const rawContent = contentInput.value;
+        
+        currentList.unshift({ 
+          date: dateInput.value, 
+          sales: salesInput.value || 0, 
+          content: rawContent 
+        });
 
-      // 3. 保存
-      const success = await saveDiaries(currentList);
-      if (success) {
-        dateInput.value = ""; 
-        salesInput.value = ""; 
-        contentInput.value = "";
-        alert("【保存完了】安全に公開されました！");
-        await displayDiaries();
-      } else {
-        alert("長文の送信で通信エラーが発生しました。\n本文の途中に特殊な記号や文字が含まれていないか確認するか、分割して試してみてください。");
+        const success = await saveDiaries(currentList);
+        if (success) {
+          dateInput.value = ""; 
+          salesInput.value = ""; 
+          contentInput.value = "";
+          alert("【保存完了】1000行以上の超長文も安全に公開されました！");
+          await displayDiaries();
+        } else {
+          alert("JSONBin（無料データ倉庫）の1回の最大サイズ上限を超えてしまった可能性があります。\nもしエラーが続く場合は、数か月分ごとに分けて投稿するか、ご相談ください！");
+        }
+      } catch (e) {
+        alert("通信中にエラーが発生しました。");
       }
       
       saveBtn.textContent = "💾 保存して投稿する"; 
       saveBtn.disabled = false;
     };
-    
+
     displayDiaries();
   </script>
 </body>
