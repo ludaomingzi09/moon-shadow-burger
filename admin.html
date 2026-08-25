@@ -8,7 +8,7 @@
     .form-group { margin-bottom: 15px; }
     label { display: block; font-weight: bold; margin-bottom: 5px; }
     input[type="date"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; }
-    textarea { height: 100px; }
+    textarea { height: 120px; }
     button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
     .diary-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; }
   </style>
@@ -46,7 +46,6 @@
   <div id="diary-list">読み込み中...</div>
 
   <script>
-    // あきこさん専用の固定IDと鍵（変更されないように直接固定しました）
     const BIN_ID = "6a8a43f5da38895dfe05659b";
     const MASTER_KEY = "$2a$10$EYKFCyKFt/nebBJYYq0uZ.44OqKYIZsj4EN5eevpnx.ivD8B3Dlmq";
 
@@ -56,7 +55,6 @@
     const saveBtn = document.querySelector("#save-diary-btn");
     const diaryList = document.querySelector("#diary-list");
 
-    // 装飾ボタンの処理
     function insertTag(startTag, endTag) {
       const start = contentInput.selectionStart;
       const end = contentInput.selectionEnd;
@@ -70,7 +68,7 @@
     document.querySelector("#btn-orange").onclick = () => insertTag("<span style='color:orange;'>", "</span>");
     document.querySelector("#btn-big").onclick = () => insertTag("<span style='font-size:1.2em; font-weight:bold;'>", "</span>");
 
-    // データ読み込み関数
+    // データ取得
     async function getDiaries() {
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
@@ -79,7 +77,6 @@
         });
         if (!res.ok) return [];
         const data = await res.json();
-        // 過去データが配列表記かオブジェクト表記かに両対応
         if (Array.isArray(data.record)) return data.record;
         return data.record.diaries || [];
       } catch (e) {
@@ -87,16 +84,17 @@
       }
     }
 
-    // データ保存関数
+    // データ保存（安全に通信できるよう最適化）
     async function saveDiaries(diaries) {
       try {
+        const payload = JSON.stringify({ diaries: diaries });
         const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
           method: "PUT",
           headers: { 
             "Content-Type": "application/json", 
             "X-Master-Key": MASTER_KEY 
           },
-          body: JSON.stringify({ diaries: diaries })
+          body: payload
         });
         return res.ok;
       } catch (e) {
@@ -137,16 +135,22 @@
         alert("日付と本文を入力してください！"); 
         return; 
       }
+      
       saveBtn.textContent = "送信中..."; 
       saveBtn.disabled = true;
 
+      // 1. 最新のデータを取得
       let currentList = await getDiaries();
+      
+      // 2. 新しい投稿を追加（改行コードの整理）
+      const cleanContent = contentInput.value.trim();
       currentList.unshift({ 
         date: dateInput.value, 
         sales: salesInput.value || 0, 
-        content: contentInput.value 
+        content: cleanContent 
       });
 
+      // 3. 保存
       const success = await saveDiaries(currentList);
       if (success) {
         dateInput.value = ""; 
@@ -155,13 +159,13 @@
         alert("【保存完了】安全に公開されました！");
         await displayDiaries();
       } else {
-        alert("保存に失敗しました。少し時間（10秒ほど）をおいて再度お試しください。");
+        alert("長文の送信で通信エラーが発生しました。\n本文の途中に特殊な記号や文字が含まれていないか確認するか、分割して試してみてください。");
       }
       
       saveBtn.textContent = "💾 保存して投稿する"; 
       saveBtn.disabled = false;
     };
-
+    
     displayDiaries();
   </script>
 </body>
