@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>特別講習会 - 月の影ハンバーガー</title>
+  
+  <!-- Google アナリティクス (必要に応じて測定IDを設定) -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/script?id=G-XXXXXXXXXX"></script> -->
+
+  <style>
+    /* 全体デザイン */
+    body {
+      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      margin: 0;
+      padding: 20px 10px;
+      background-color: #1a1a2e; /* ナイトカフェ風の落ち着いたダークブルー */
+      color: #eaeaea;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    /* イベントカード（カード背景に月夜風の画像をうっすら配置） */
+    .event-card {
+      max-width: 650px;
+      margin: 20px auto;
+      padding: 30px 25px;
+      background-color: rgba(30, 30, 50, 0.85); /* 文字が読みやすいように少し濃いめの背景 */
+      background-image: linear-gradient(rgba(20, 20, 35, 0.75), rgba(20, 20, 35, 0.75)), 
+                        url('https://images.unsplash.com/photo-1532767153582-b1a0e5145009?auto=format&fit=crop&w=1000&q=80'); /* フリーの月夜の写真 */
+      background-size: cover;
+      background-position: center;
+      border: 2px solid #f39c12; /* アクセントのゴールド枠 */
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      line-height: 1.8;
+    }
+
+    /* メインタイトル（ドーンと大きく） */
+    .main-title {
+      font-size: 1.8em;
+      color: #f1c40f;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(241, 196, 15, 0.4);
+    }
+
+    /* キャッチコピー */
+    .sub-title {
+      font-size: 1.4em;
+      color: #ffffff;
+      text-align: center;
+      font-weight: bold;
+      border-bottom: 2px dashed #f39c12;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    /* 各セクションの見出し */
+    .section-title {
+      font-size: 1.2em;
+      color: #ff9f43;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding: 5px 12px;
+      border-left: 4px solid #f39c12;
+      margin-top: 25px;
+      margin-bottom: 10px;
+    }
+
+    /* カリキュラムリスト */
+    .session-box {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .session-num {
+      color: #f1c40f;
+      font-weight: bold;
+    }
+
+    /* 強調文章 */
+    .highlight-text {
+      color: #ff6b6b;
+      font-weight: bold;
+    }
+
+    /* 受講料・注意事項の枠 */
+    .info-box {
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 1px solid #555;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 30px;
+    }
+    .info-box ul {
+      margin: 5px 0 0 0;
+      padding-left: 20px;
+    }
+
+    /* 戻るボタン */
+    .btn-container {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .back-btn {
+      color: #f1c40f;
+      text-decoration: none;
+      border: 1px solid #f1c40f;
+      padding: 8px 20px;
+      border-radius: 20px;
+      transition: 0.3s;
+    }
+    .back-btn:hover {
+      background-color: #f1c40f;
+      color: #1a1a2e;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="event-card">
+    <h1 class="main-title">🌙 月灯りカフェ特別講習会</h1>
+    <div class="sub-title">「ビレを踊ろう」全3回シリーズ💃</div>
+
+    <p style="text-align: center;">3回の受講で、あなたもビレを完璧に踊りこなせます。</p>
+
+    <div class="section-title">📅 カリキュラム</div>
+    
+    <div class="session-box">
+      <div class="session-num">第1回</div>
+      <b>「まずはビレとは何か」</b><br>
+      〜Beat Itの歴史とビレの精神〜
+    </div>
+
+    <div class="session-box">
+      <div class="session-num">第2回</div>
+      <b>「腕をこう！足をこう！」</b><br>
+      〜マイケル直伝……ではない基本ステップ〜
+    </div>
+
+    <div class="session-box">
+      <div class="session-num">第3回</div>
+      <b>「実践！ビレを踊りこなす」</b><br>
+      〜最後は全員でビレ〜〜〜‼️〜
+    </div>
+
+    <div class="section-title">🎤 併設講座のお知らせ</div>
+    <p>
+      <b>「ビレを歌おう」講座</b><br>
+      こちらの受講も強くお勧めいたします。<br><br>
+      なぜなら、<br>
+      🎵 <i>Just beat it, beat it…</i><br>
+      ↓<br>
+      🎤 <span class="highlight-text">「ジャスッ ビレッ ビレッ‼️」</span><br><br>
+      と歌えるようになってこそ、<b>真のビレラー</b>だからです。
+    </p>
+
+    <p style="font-size: 0.9em; color: #ccc; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px;">
+      ⚠️ <b>ご注意：</b><br>
+      歌唱講座を受講せずにダンス講座だけ受講された場合、<br>
+      「ビレ〜〜〜💃」と踊りながら口だけが「……ビート……イット……」になってしまう可能性がありますのでご了承ください🤣
+    </p>
+
+    <div class="info-box">
+      <div style="font-size: 1.2em; color: #f1c40f; font-weight: bold;">💰 受講料：300月幣</div>
+      <ul>
+        <li>※ 3回セット価格です</li>
+        <li>※ ビレ用衣装は各自ご用意ください</li>
+        <li>※ 黒い帽子はなくても構いません</li>
+        <li>※ ムーンウォークは別料金です🌙🤣</li>
+      </ul>
+    </div>
+
+    <div class="btn-container">
+      <a href="diary.html" class="back-btn">← 日誌一覧へ戻る</a>
+    </div>
+  </div>
+
+</body>
+</html>
