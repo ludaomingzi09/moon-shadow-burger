@@ -120,6 +120,16 @@
       background-color: #0f172a;
     }
 
+    .placeholder-box {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #0f172a;
+      color: #fcd34d;
+      font-size: 2.5em;
+    }
+
     .menu-card-body {
       padding: 15px;
       flex-grow: 1;
@@ -245,7 +255,6 @@
     <h1>🌙 月灯りカフェ</h1>
   </header>
 
-  <!-- ページナビゲーション -->
   <div class="nav-buttons">
     <a href="diary.html" class="btn-nav">📖 店主日誌を開く</a>
     <a href="about.html" class="btn-nav">🌙 月灯りカフェについてを開く</a>
@@ -257,13 +266,11 @@
       気になるメニューをタップすると、写真とお品書きの物語が開きます。
     </p>
 
-    <!-- メニューがここに表示されます -->
     <div id="menu-container" class="menu-grid">
       <p style="text-align:center; grid-column: 1/-1; color: #94a3b8;">お品書きを読み込み中...</p>
     </div>
   </div>
 
-  <!-- ポップアップ（モーダル）窓 -->
   <div id="modal" class="modal-overlay" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -279,49 +286,52 @@
   </footer>
 
   <script>
-  // CSVファイルを読み込んで表示する関数
     async function loadMenu() {
       try {
         const response = await fetch('menu.csv');
         const data = await response.text();
         
-        // CSVの行を分割
         const rows = parseCSV(data);
         const container = document.getElementById('menu-container');
         container.innerHTML = '';
 
-        // 1行目はヘッダーなので2行目（i=1）からループ
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
-          if (row.length < 4 || !row[0].trim()) continue; // 空行スキップ
+          if (row.length < 2 || !row[0].trim()) continue;
 
-          const name = row[0].trim();
-          const type = row[1].trim();
-          const desc = row[2].trim();
-          const imgUrl = row[4] ? row[4].trim() : ''; // E列（5列目）
+          const name = row[0] ? row[0].trim() : '';
+          const type = row[1] ? row[1].trim() : '';
+          const desc = row[2] ? row[2].trim() : '';
+          // D列ならrow[3]、E列ならrow[4]（入力状況に応じて自動で画像URLを取得）
+          let imgUrl = '';
+          if (row[4] && row[4].trim().startsWith('http')) {
+            imgUrl = row[4].trim();
+          } else if (row[3] && row[3].trim().startsWith('http')) {
+            imgUrl = row[3].trim();
+          }
 
-          // カードを作成
           const card = document.createElement('div');
           card.className = 'menu-card';
           card.onclick = () => openModal(name, type, desc, imgUrl);
 
-          // 画像要素を作成（エラー時も安全に処理）
-          const img = document.createElement('img');
-          img.src = imgUrl;
-          img.alt = name;
-          img.onerror = function() {
-            this.style.display = 'none'; // 画像が読めない時は非表示にし、代わりに背景と月を表示
-            const placeholder = document.createElement('div');
-            placeholder.style.height = '160px';
-            placeholder.style.display = 'flex';
-            placeholder.style.alignItems = 'center';
-            placeholder.style.justifyContent = 'center';
-            placeholder.style.backgroundColor = '#0f172a';
-            placeholder.style.color = '#fcd34d';
-            placeholder.style.fontSize = '2.5em';
-            placeholder.innerText = '🌙';
-            card.insertBefore(placeholder, card.firstChild);
-          };
+          if (imgUrl) {
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.alt = name;
+            // 写真が読めない場合は🌙マークに差し替え（1つだけ）
+            img.onerror = function() {
+              const ph = document.createElement('div');
+              ph.className = 'placeholder-box';
+              ph.innerText = '🌙';
+              card.replaceChild(ph, img);
+            };
+            card.appendChild(img);
+          } else {
+            const ph = document.createElement('div');
+            ph.className = 'placeholder-box';
+            ph.innerText = '🌙';
+            card.appendChild(ph);
+          }
 
           const body = document.createElement('div');
           body.className = 'menu-card-body';
@@ -333,19 +343,16 @@
             <div class="click-hint">詳しく見る 🔍</div>
           `;
 
-          card.appendChild(img);
           card.appendChild(body);
           container.appendChild(card);
         }
       } catch (error) {
         console.error('エラー:', error);
         document.getElementById('menu-container').innerHTML = 
-          '<p style="text-align:center; grid-column: 1/-1; color: #ef4444;">お品書きの読み込みに失敗しました。menu.csvがアップロードされているか確認してください。</p>';
+          '<p style="text-align:center; grid-column: 1/-1; color: #ef4444;">お品書きの読み込みに失敗しました。menu.csvを確認してください。</p>';
       }
     }
 
-
-    // 簡易CSVパース関数（カンマや改行に対応）
     function parseCSV(text) {
       const result = [];
       let row = [];
@@ -385,23 +392,26 @@
       return result;
     }
 
-    // モーダルを開く
     function openModal(name, type, desc, imgUrl) {
-      document.getElementById('modal-img').src = imgUrl;
+      const modalImg = document.getElementById('modal-img');
+      if (imgUrl) {
+        modalImg.src = imgUrl;
+        modalImg.style.display = 'block';
+      } else {
+        modalImg.style.display = 'none';
+      }
       document.getElementById('modal-type').innerText = type;
       document.getElementById('modal-title').innerText = name;
       document.getElementById('modal-desc').innerText = desc;
       document.getElementById('modal').style.display = 'flex';
     }
 
-    // モーダルを閉じる
     function closeModal(e) {
       if (!e || e.target.id === 'modal' || e.target.className === 'modal-close') {
         document.getElementById('modal').style.display = 'none';
       }
     }
 
-    // ページ読み込み時に実行
     window.onload = loadMenu;
   </script>
 
