@@ -96,6 +96,7 @@
       margin-top: -15px;
       margin-bottom: 15px;
       letter-spacing: 1px;
+      line-height: 1.6;
     }
 
     /* メニューグリッド */
@@ -272,8 +273,10 @@
 
   <div class="container">
     <h2 class="section-title">🌙 お品書き（MENU）</h2>
-    <div class="currency-note">※ 通貨は月幣です。￥と相場は常にれんどしております</div>
-    <div class="currency-note">※ メニューはなんとなくならんでおります</div>
+    <div class="currency-note">
+      ※ 通貨は月幣です。￥と相場は常にれんどしております<br>
+      ※ メニューはなんとなくならんでおります
+    </div>
     <p style="text-align: center; color: #94a3b8; font-size: 0.9em; margin-bottom: 30px;">
       気になるメニューをタップすると、写真とお品書きの物語が開きます。
     </p>
@@ -317,7 +320,6 @@
           const type = row[1] ? row[1].trim() : '';
           const desc = row[2] ? row[2].trim() : '';
           
-          // F列（index 5）、なければ E列（index 4）、D列（index 3）の順で読み込む設定に変更
           let imgUrl = '';
           if (row[5] && row[5].trim().startsWith('http')) {
             imgUrl = row[5].trim();
