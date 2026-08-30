@@ -89,6 +89,15 @@
       text-align: center;
     }
 
+    .currency-note {
+      text-align: center;
+      color: #fcd34d;
+      font-size: 0.85em;
+      margin-top: -15px;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+    }
+
     /* メニューグリッド */
     .menu-grid {
       display: grid;
@@ -255,6 +264,7 @@
     <h1>🌙 月灯りカフェ</h1>
   </header>
 
+  <!-- ページナビゲーション -->
   <div class="nav-buttons">
     <a href="diary.html" class="btn-nav">📖 店主日誌を開く</a>
     <a href="about.html" class="btn-nav">🌙 月灯りカフェについてを開く</a>
@@ -262,15 +272,18 @@
 
   <div class="container">
     <h2 class="section-title">🌙 お品書き（MENU）</h2>
+    <div class="currency-note">※ 通貨は月幣です。￥と相場は常にれんどしております</div>
     <p style="text-align: center; color: #94a3b8; font-size: 0.9em; margin-bottom: 30px;">
       気になるメニューをタップすると、写真とお品書きの物語が開きます。
     </p>
 
+    <!-- メニュー表示コンテナ -->
     <div id="menu-container" class="menu-grid">
       <p style="text-align:center; grid-column: 1/-1; color: #94a3b8;">お品書きを読み込み中...</p>
     </div>
   </div>
 
+  <!-- ポップアップ（モーダル）窓 -->
   <div id="modal" class="modal-overlay" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -302,7 +315,6 @@
           const name = row[0] ? row[0].trim() : '';
           const type = row[1] ? row[1].trim() : '';
           const desc = row[2] ? row[2].trim() : '';
-          // D列ならrow[3]、E列ならrow[4]（入力状況に応じて自動で画像URLを取得）
           let imgUrl = '';
           if (row[4] && row[4].trim().startsWith('http')) {
             imgUrl = row[4].trim();
@@ -318,7 +330,6 @@
             const img = document.createElement('img');
             img.src = imgUrl;
             img.alt = name;
-            // 写真が読めない場合は🌙マークに差し替え（1つだけ）
             img.onerror = function() {
               const ph = document.createElement('div');
               ph.className = 'placeholder-box';
