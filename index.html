@@ -1,66 +1,388 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>月灯りカフェ | 京都 哲学の道・大文字山麓</title>
-    <meta name="google-site-verification" content="7YvH9qoDImvYXlcopKbzXLvtUzAw8LhJ1eByOhUxpCU" />
-    <link rel="stylesheet" href="style.css">
-  </head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>月灯りカフェ | 京都 哲学の道・大文字山麓</title>
+  <style>
+    body {
+      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+      background-color: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 0;
+      line-height: 1.8;
+    }
 
-  <body>
-  <!-- お店のタイトル -->
-    <h1>月灯りカフェ | 京都 哲学の道・大文字山麓</h1>
-    <p>〜ほそぼそと営業中〜</p>
-    <p>〜通貨は月幣です。￥と相場は常にれんどしております〜</p>
+    /* ヘッダー */
+    header {
+      text-align: center;
+      padding: 40px 20px 30px 20px;
+      background: linear-gradient(185deg, #0f172a 0%, #1e1b4b 100%);
+      border-bottom: 2px solid #f59e0b;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
 
-    <!-- 各ページへのリンク -->
-    <p>
-      <a href="diary.html" style="text-decoration: none;">
-        <button style="cursor: pointer;">📖 業務日誌を開く</button>
-      </a>
+    .sub-title {
+      font-size: 0.9em;
+      color: #fcd34d;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      font-weight: 300;
+    }
 
-      <a href="about.html" style="text-decoration: none;">
-        <button style="cursor: pointer;">📖 月灯りカフェについてを開く</button>
-      </a>
+    h1 {
+      margin: 0;
+      font-size: 2.3em;
+      color: #ffffff;
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Georgia', serif;
+      letter-spacing: 3px;
+      text-shadow: 0 0 12px rgba(253, 224, 71, 0.5);
+    }
 
+    /* ナビゲーションボタン */
+    .nav-buttons {
+      text-align: center;
+      margin: 20px 0 35px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-nav {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+      color: #f1c40f;
+      background-color: #1e1e32;
+      border: 1px solid #f1c40f;
+      border-radius: 25px;
+      padding: 10px 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      min-width: 250px;
+      text-decoration: none;
+      display: inline-block;
+      transition: 0.3s;
+    }
+
+    .btn-nav:hover {
+      background-color: #f1c40f;
+      color: #0f172a;
+    }
+
+    /* メインコンテナ */
+    .container {
+      max-width: 800px;
+      margin: 0 auto 50px auto;
+      padding: 0 20px;
+    }
+
+    .section-title {
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+      font-size: 1.5em;
+      color: #fcd34d;
+      border-bottom: 1px dashed #f59e0b;
+      padding-bottom: 8px;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    /* メニューグリッド */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .menu-card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.2);
+      border-color: #f59e0b;
+    }
+
+    .menu-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background-color: #0f172a;
+    }
+
+    .menu-card-body {
+      padding: 15px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .menu-type {
+      font-size: 0.75em;
+      color: #fcd34d;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .menu-name {
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #ffffff;
+      margin: 0 0 8px 0;
+    }
+
+    .click-hint {
+      font-size: 0.8em;
+      color: #94a3b8;
+      text-align: right;
+    }
+
+    /* モーダル（ポップアップ窓） */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .modal-content {
+      background-color: #1e293b;
+      border: 1px solid #f59e0b;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 25px;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 1.8em;
+      color: #94a3b8;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #fcd34d;
+    }
+
+    .modal-img {
+      width: 100%;
+      max-height: 280px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      background-color: #0f172a;
+    }
+
+    .modal-type {
+      font-size: 0.85em;
+      color: #fcd34d;
+      margin-bottom: 5px;
+    }
+
+    .modal-title {
+      font-size: 1.5em;
+      color: #ffffff;
+      margin: 0 0 15px 0;
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    }
+
+    .modal-desc {
+      color: #cbd5e1;
+      font-size: 0.95em;
+      white-space: pre-wrap;
+      line-height: 1.8;
+      border-top: 1px dashed #334155;
+      padding-top: 15px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px 0;
+      color: #64748b;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="sub-title">― 京都 哲学の道・大文字山麓 ―</div>
+    <h1>🌙 月灯りカフェ</h1>
+  </header>
+
+  <!-- ページナビゲーション -->
+  <div class="nav-buttons">
+    <a href="diary.html" class="btn-nav">📖 店主日誌を開く</a>
+    <a href="about.html" class="btn-nav">🌙 月灯りカフェについてを開く</a>
+  </div>
+
+  <div class="container">
+    <h2 class="section-title">🌙 お品書き（MENU）</h2>
+    <p style="text-align: center; color: #94a3b8; font-size: 0.9em; margin-bottom: 30px;">
+      気になるメニューをタップすると、写真とお品書きの物語が開きます。
     </p>
-    <!-- ハンバーガーのメニュー -->
-    <h2>Burgers</h2>
-    <ul id="burger-list">
-      <li>満月チーズバーガー 850月幣</li>
-      <li>三日月アボカドエビバーガー 900月幣</li>
-      <li>宵闇テリヤキバーガー 800月幣</li>
-      <li>【夜限定】おぼろ月夜の和風照り焼き蒟蒻バーガー 780月幣</li>
-    </ul>
 
-    <!-- ドリンクのメニュー -->
-    <h2>Drinks</h2>
-    <ul id="drink-list">
-      <li>抹茶ラテ 550月幣</li>
-      <li>ミントティー 450月幣</li>
-      <li>当店自慢のオリジナルブレンドコーヒー 450月幣</li>
-    </ul>
+    <!-- メニューがここに表示されます -->
+    <div id="menu-container" class="menu-grid">
+      <p style="text-align:center; grid-column: 1/-1; color: #94a3b8;">お品書きを読み込み中...</p>
+    </div>
+  </div>
 
-    <!-- 注文したものを表示するエリア
-    <hr>
-    <p>選択中の注文：<span id="selected-item">まだ選ばれていません</span></p> -->
+  <!-- ポップアップ（モーダル）窓 -->
+  <div id="modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <img id="modal-img" class="modal-img" src="" alt="">
+      <div id="modal-type" class="modal-type"></div>
+      <h3 id="modal-title" class="modal-title"></h3>
+      <div id="modal-desc" class="modal-desc"></div>
+    </div>
+  </div>
 
-    <!-- 注文（カート）エリア -->
-    <hr>
-    <h2>ご注文内容（カート）</h2>
+  <footer>
+    &copy; 月灯りカフェ - Kyoto Jodoji
+  </footer>
 
-    <!-- 選んだ商品がここにリストで並びます -->
-    <ul id="cart-list">
-      <li>まだ何も選ばれていません</li>
-    </ul>
+  <script>
+    // CSVファイルを読み込んで表示する関数
+    async function loadMenu() {
+      try {
+        const response = await fetch('menu.csv');
+        const data = await response.text();
+        
+        // CSVの行を分割
+        const rows = parseCSV(data);
+        const container = document.getElementById('menu-container');
+        container.innerHTML = '';
 
-    <!-- 合計金額を表示するエリア -->
-    <p><strong>合計：<span id="total-price">0</span> 月幣</strong></p>
-  
-    <!-- カートを空にするボタン -->
-    <button id="clear-btn">カートを空にする</button>
+        // 1行目はヘッダーなので2行目（i=1）からループ
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (row.length < 4 || !row[0].trim()) continue; // 空行スキップ
 
-<script src="script.js"></script>
-  </body>
+          const name = row[0].trim();
+          const type = row[1].trim();
+          const desc = row[2].trim();
+          const imgUrl = row[4].trim();
+
+          // カードを作成
+          const card = document.createElement('div');
+          card.className = 'menu-card';
+          card.onclick = () => openModal(name, type, desc, imgUrl);
+
+          card.innerHTML = `
+            <img src="${imgUrl}" alt="${name}" onerror="this.src='https://via.placeholder.com/300x200/1e293b/fcd34d?text=Moonlight+Cafe'">
+            <div class="menu-card-body">
+              <div>
+                <div class="menu-type">${type}</div>
+                <div class="menu-name">${name}</div>
+              </div>
+              <div class="click-hint">詳しく見る 🔍</div>
+            </div>
+          `;
+          container.appendChild(card);
+        }
+      } catch (error) {
+        console.error('エラー:', error);
+        document.getElementById('menu-container').innerHTML = 
+          '<p style="text-align:center; grid-column: 1/-1; color: #ef4444;">お品書きの読み込みに失敗しました。menu.csvがアップロードされているか確認してください。</p>';
+      }
+    }
+
+    // 簡易CSVパース関数（カンマや改行に対応）
+    function parseCSV(text) {
+      const result = [];
+      let row = [];
+      let inQuotes = false;
+      let current = '';
+
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = text[i+1];
+
+        if (c === '"') {
+          if (inQuotes && next === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === ',' && !inQuotes) {
+          row.push(current);
+          current = '';
+        } else if ((c === '\r' || c === '\n') && !inQuotes) {
+          if (c === '\r' && next === '\n') { i++; }
+          row.push(current);
+          if (row.length > 0 && row.some(field => field.trim() !== '')) {
+            result.push(row);
+          }
+          row = [];
+          current = '';
+        } else {
+          current += c;
+        }
+      }
+      if (current || row.length > 0) {
+        row.push(current);
+        result.push(row);
+      }
+      return result;
+    }
+
+    // モーダルを開く
+    function openModal(name, type, desc, imgUrl) {
+      document.getElementById('modal-img').src = imgUrl;
+      document.getElementById('modal-type').innerText = type;
+      document.getElementById('modal-title').innerText = name;
+      document.getElementById('modal-desc').innerText = desc;
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    // モーダルを閉じる
+    function closeModal(e) {
+      if (!e || e.target.id === 'modal' || e.target.className === 'modal-close') {
+        document.getElementById('modal').style.display = 'none';
+      }
+    }
+
+    // ページ読み込み時に実行
+    window.onload = loadMenu;
+  </script>
+
+</body>
 </html>
