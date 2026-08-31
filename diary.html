@@ -96,7 +96,6 @@
         const res = await fetch(GAS_URL);
         const diaries = await res.json();
 
-        // ヘッダー行や無効データを除外フィルタリング
         const validDiaries = diaries.filter(d => d.date && d.date !== "date" && d.content !== "content");
 
         if (!validDiaries || validDiaries.length === 0) {
@@ -106,9 +105,8 @@
 
         diaryList.innerHTML = "";
         validDiaries.forEach((diary, index) => {
-          // 記事ごとに固有のIDを作成（日付内の記号を除去、万が一重複したとき用にindexを添える）
           const safeDate = String(diary.date).replace(/[^a-zA-Z0-9]/g, "_");
-          const iineId = `diary_${safeDate}_${index}`;
+          const iineId = `tsuki_diary_${safeDate}_${index}`;
 
           const card = document.createElement("div");
           card.className = "diary-card";
@@ -118,7 +116,7 @@
             <hr>
             <p>${(diary.content || "").replace(/\n/g, "<br>")}</p>
             <div style="margin-top: 15px; text-align: right;">
-              <span class="iine-btn" data-iine-id="${iineId}" style="cursor: pointer; display: inline-block; padding: 6px 16px; background-color: #1e293b; border: 1px solid #f59e0b; border-radius: 20px; color: #fcd34d; font-size: 0.9em;">
+              <span class="iine-btn" data-iine-id="${iineId}" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; background-color: #1e293b; border: 1px solid #f59e0b; border-radius: 20px; color: #fcd34d; font-size: 0.9em;">
                 🌙 いいね
               </span>
             </div>
@@ -126,20 +124,26 @@
           diaryList.appendChild(card);
         });
 
-        // 動的追加後に「いいねボタン改」のボタン機能を初期化・描画
-        if (window.iine) {
-          window.iine.init();
-        }
+        // いいねボタンのスクリプトを動的に読み込んで確実に適用させる
+        loadIineScript();
 
       } catch (e) {
         diaryList.innerHTML = "<p>通信エラーが発生しました。</p>";
       }
     }
 
+    function loadIineScript() {
+      // すでにスクリプトがある場合は一度削除して再読み込み
+      const oldScript = document.getElementById('iine-script');
+      if (oldScript) oldScript.remove();
+
+      const script = document.createElement('script');
+      script.id = 'iine-script';
+      script.src = 'https://iine.allne.jp/iine.js';
+      document.body.appendChild(script);
+    }
+
     loadPublicDiaries();
   </script>
-
-  <!-- いいねボタン改の外部スクリプト -->
-  <script src="https://iine.allne.jp/iine.js"></script>
 </body>
 </html>
