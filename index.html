@@ -160,7 +160,14 @@
       font-size: 1.1em;
       font-weight: bold;
       color: #ffffff;
-      margin: 0 0 8px 0;
+      margin: 0 0 4px 0;
+    }
+
+    .menu-price {
+      font-size: 0.95em;
+      color: #f59e0b;
+      font-weight: bold;
+      margin-bottom: 8px;
     }
 
     .click-hint {
@@ -237,8 +244,15 @@
     .modal-title {
       font-size: 1.5em;
       color: #ffffff;
-      margin: 0 0 15px 0;
+      margin: 0 0 5px 0;
       font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    }
+
+    .modal-price {
+      font-size: 1.1em;
+      color: #f59e0b;
+      font-weight: bold;
+      margin-bottom: 15px;
     }
 
     .modal-desc {
@@ -285,42 +299,26 @@
     <div id="menu-container" class="menu-grid">
       <p style="text-align:center; grid-column: 1/-1; color: #94a3b8;">お品書きを読み込み中...</p>
     </div>
-  </div>
 
-  <!-- ポップアップ（モーダル）窓 -->
-  <div id="modal" class="modal-overlay" onclick="closeModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <span class="modal-close" onclick="closeModal()">&times;</span>
-      <img id="modal-img" class="modal-img" src="" alt="" onerror="this.style.display='none'">
-      <div id="modal-type" class="modal-type"></div>
-      <h3 id="modal-title" class="modal-title"></h3>
-      <div id="modal-desc" class="modal-desc"></div>
-    </div>
-  </div>
-  
-  <!-- 月灯りへのひとこと（お問い合わせフォーム） -->
+    <!-- 月灯りへのひとこと（お問い合わせフォーム） -->
     <div style="margin-top: 60px; padding: 30px 20px; background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
       <h2 class="section-title" style="margin-bottom: 10px;">✉️ 月灯りへのひとこと</h2>
       <p style="text-align: center; color: #94a3b8; font-size: 0.85em; margin-bottom: 25px;">
         カフェへのご感想や、店主へのメッセージなどお気軽にどうぞ。
       </p>
 
-      <!-- 送信先サービス（Formspreeなど）を使う場合は action にURLを指定します -->
-      <form action="https://formspree.io/f/xyeykkvz" method="POST" style="display: flex; flex-direction: column; gap: 18px; max-width: 500px; margin: 0 auto;">
+      <form action="https://formspree.io/f/xyzyqwbw" method="POST" style="display: flex; flex-direction: column; gap: 18px; max-width: 500px; margin: 0 auto;">
         
-        <!-- お名前（任意） -->
         <div>
           <label style="display: block; color: #fcd34d; font-size: 0.9em; margin-bottom: 6px;">お名前 <span style="color: #64748b; font-size: 0.8em;">（任意）</span></label>
           <input type="text" name="name" placeholder="例: 月の旅人" style="width: 100%; padding: 10px 12px; background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #ffffff; font-size: 1em; box-sizing: border-box;">
         </div>
 
-        <!-- メールアドレス（任意） -->
         <div>
           <label style="display: block; color: #fcd34d; font-size: 0.9em; margin-bottom: 6px;">メールアドレス <span style="color: #64748b; font-size: 0.8em;">（任意）</span></label>
           <input type="email" name="email" placeholder="example@email.com" style="width: 100%; padding: 10px 12px; background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #ffffff; font-size: 1em; box-sizing: border-box;">
         </div>
 
-        <!-- 返事の要否（ラジオボタン） -->
         <div>
           <label style="display: block; color: #fcd34d; font-size: 0.9em; margin-bottom: 8px;">お返事について</label>
           <div style="display: flex; flex-direction: column; gap: 8px; color: #cbd5e1; font-size: 0.9em; padding-left: 5px;">
@@ -336,19 +334,30 @@
           </div>
         </div>
 
-        <!-- ひとこと（必須） -->
         <div>
           <label style="display: block; color: #fcd34d; font-size: 0.9em; margin-bottom: 6px;">ひとこと <span style="color: #ef4444; font-size: 0.8em;">（必須）</span></label>
           <textarea name="message" required rows="4" placeholder="メッセージをお寄せください..." style="width: 100%; padding: 10px 12px; background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #ffffff; font-size: 1em; box-sizing: border-box; resize: vertical;"></textarea>
         </div>
 
-        <!-- 送信ボタン -->
         <button type="submit" class="btn-nav" style="margin-top: 10px; border: 1px solid #f59e0b; background-color: #f59e0b; color: #0f172a; font-size: 1.05em; cursor: pointer; width: 100%;">
           月灯りに届ける🌙
         </button>
 
       </form>
     </div>
+  </div>
+
+  <!-- ポップアップ（モーダル）窓 -->
+  <div id="modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <img id="modal-img" class="modal-img" src="" alt="" onerror="this.style.display='none'">
+      <div id="modal-type" class="modal-type"></div>
+      <h3 id="modal-title" class="modal-title"></h3>
+      <div id="modal-price" class="modal-price"></div>
+      <div id="modal-desc" class="modal-desc"></div>
+    </div>
+  </div>
 
   <footer>
     &copy; 月灯りカフェ - Kyoto Jodoji
@@ -368,22 +377,25 @@
           const row = rows[i];
           if (row.length < 2 || !row[0].trim()) continue;
 
-          const name = row[0] ? row[0].trim() : '';
-          const type = row[1] ? row[1].trim() : '';
-          const desc = row[2] ? row[2].trim() : '';
+          // 新しい列配置に合わせてインデックス（位置番号）を変更
+          const name = row[0] ? row[0].trim() : '';  // A列 (1列目)
+          const type = row[1] ? row[1].trim() : '';  // B列 (2列目)
+          const desc = row[2] ? row[2].trim() : '';  // C列 (3列目)
+          const price = row[3] ? row[3].trim() : ''; // D列 (4列目: 価格)
           
+          // 画像URL（G列: 7列目の index 6 を最優先、念のためF列やE列もフォロー）
           let imgUrl = '';
-          if (row[5] && row[5].trim().startsWith('http')) {
+          if (row[6] && row[6].trim().startsWith('http')) {
+            imgUrl = row[6].trim();
+          } else if (row[5] && row[5].trim().startsWith('http')) {
             imgUrl = row[5].trim();
           } else if (row[4] && row[4].trim().startsWith('http')) {
             imgUrl = row[4].trim();
-          } else if (row[3] && row[3].trim().startsWith('http')) {
-            imgUrl = row[3].trim();
           }
 
           const card = document.createElement('div');
           card.className = 'menu-card';
-          card.onclick = () => openModal(name, type, desc, imgUrl);
+          card.onclick = () => openModal(name, type, desc, price, imgUrl);
 
           if (imgUrl) {
             const img = document.createElement('img');
@@ -409,6 +421,7 @@
             <div>
               <div class="menu-type">${type}</div>
               <div class="menu-name">${name}</div>
+              <div class="menu-price">${price}</div>
             </div>
             <div class="click-hint">詳しく見る 🔍</div>
           `;
@@ -462,7 +475,7 @@
       return result;
     }
 
-    function openModal(name, type, desc, imgUrl) {
+    function openModal(name, type, desc, price, imgUrl) {
       const modalImg = document.getElementById('modal-img');
       if (imgUrl) {
         modalImg.src = imgUrl;
@@ -472,6 +485,7 @@
       }
       document.getElementById('modal-type').innerText = type;
       document.getElementById('modal-title').innerText = name;
+      document.getElementById('modal-price').innerText = price;
       document.getElementById('modal-desc').innerText = desc;
       document.getElementById('modal').style.display = 'flex';
     }
