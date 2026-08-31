@@ -106,7 +106,7 @@
         diaryList.innerHTML = "";
         validDiaries.forEach((diary, index) => {
           const safeDate = String(diary.date).replace(/[^a-zA-Z0-9]/g, "_");
-          const iineId = `tsuki_diary_${safeDate}_${index}`;
+          const itemIdentifier = `tsuki_diary_${safeDate}_${index}`;
 
           const card = document.createElement("div");
           card.className = "diary-card";
@@ -116,31 +116,41 @@
             <hr>
             <p>${(diary.content || "").replace(/\n/g, "<br>")}</p>
             <div style="margin-top: 15px; text-align: right;">
-              <span class="iine-btn" data-iine-id="${iineId}" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; background-color: #1e293b; border: 1px solid #f59e0b; border-radius: 20px; color: #fcd34d; font-size: 0.9em;">
-                🌙 いいね
+              <!-- LikeBtn（いいねボタン） -->
+              <span class="likebtn-wrapper" 
+                    data-theme="custom" 
+                    data-btn_size="small"
+                    data-bg_color="#1e293b"
+                    data-brdr_color="#f59e0b"
+                    data-fnt_color="#fcd34d"
+                    data-icon_l_c="#fcd34d"
+                    data-identifier="${itemIdentifier}"
+                    data-show_like_label="false"
+                    data-popup_disabled="true"
+                    data-counter_clickable="true">
               </span>
             </div>
           `;
           diaryList.appendChild(card);
         });
 
-        // いいねボタンのスクリプトを動的に読み込んで確実に適用させる
-        loadIineScript();
+        // ボタンパーツの動的初期化スクリプトを実行
+        refreshLikeBtn();
 
       } catch (e) {
         diaryList.innerHTML = "<p>通信エラーが発生しました。</p>";
       }
     }
 
-    function loadIineScript() {
-      // すでにスクリプトがある場合は一度削除して再読み込み
-      const oldScript = document.getElementById('iine-script');
-      if (oldScript) oldScript.remove();
-
-      const script = document.createElement('script');
-      script.id = 'iine-script';
-      script.src = 'https://iine.allne.jp/iine.js';
-      document.body.appendChild(script);
+    function refreshLikeBtn() {
+      if (typeof(LikeBtn) !== "undefined") {
+        LikeBtn.init();
+      } else {
+        const script = document.createElement('script');
+        script.src = "//w.likebtn.com/js/w/widget.js";
+        script.async = true;
+        document.body.appendChild(script);
+      }
     }
 
     loadPublicDiaries();
