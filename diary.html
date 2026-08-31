@@ -16,7 +16,6 @@
   <style>
     body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; background-color: #fff8f0; }
     .diary-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; max-height: 300px; overflow-y: auto; }
-
   </style>
 </head>
 <body>
@@ -86,12 +85,10 @@
       <a href="index.html" class="btn-back">📖 トップへ戻る</a>
     </div>
 
-
-  <div id="diary-list">読み込み中...</div>
+  <div id="diary-list" style="margin-top: 20px;">読み込み中...</div>
 
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzO8d8v49ZJw1ms7v7nOKGjuVSXM5_k9COs_AGcYgLKEh_zUddDNU98n68daqHBbpE5eA/exec";
-    // ※発行されたGASのURLがある場合はここに指定
     const diaryList = document.querySelector("#diary-list");
 
     async function loadPublicDiaries() {
@@ -108,12 +105,32 @@
         }
 
         diaryList.innerHTML = "";
-        validDiaries.forEach(diary => {
+        validDiaries.forEach((diary, index) => {
+          // 記事ごとに固有のIDを作成（日付内の記号を除去、万が一重複したとき用にindexを添える）
+          const safeDate = String(diary.date).replace(/[^a-zA-Z0-9]/g, "_");
+          const iineId = `diary_${safeDate}_${index}`;
+
           const card = document.createElement("div");
           card.className = "diary-card";
-          card.innerHTML = `<h3>📅 ${diary.date}</h3><p>💰 本日の売上: ${diary.sales || 0} 月幣</p><hr><p>${(diary.content || "").replace(/\n/g, "<br>")}</p>`;
+          card.innerHTML = `
+            <h3>📅 ${diary.date}</h3>
+            <p>💰 本日の売上: ${diary.sales || 0} 月幣</p>
+            <hr>
+            <p>${(diary.content || "").replace(/\n/g, "<br>")}</p>
+            <div style="margin-top: 15px; text-align: right;">
+              <span class="iine-btn" data-iine-id="${iineId}" style="cursor: pointer; display: inline-block; padding: 6px 16px; background-color: #1e293b; border: 1px solid #f59e0b; border-radius: 20px; color: #fcd34d; font-size: 0.9em;">
+                🌙 いいね
+              </span>
+            </div>
+          `;
           diaryList.appendChild(card);
         });
+
+        // 動的追加後に「いいねボタン改」のボタン機能を初期化・描画
+        if (window.iine) {
+          window.iine.init();
+        }
+
       } catch (e) {
         diaryList.innerHTML = "<p>通信エラーが発生しました。</p>";
       }
@@ -121,5 +138,8 @@
 
     loadPublicDiaries();
   </script>
+
+  <!-- いいねボタン改の外部スクリプト -->
+  <script src="https://iine.allne.jp/iine.js"></script>
 </body>
 </html>
