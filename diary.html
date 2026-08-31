@@ -116,7 +116,7 @@
             <hr>
             <p>${(diary.content || "").replace(/\n/g, "<br>")}</p>
             <div style="margin-top: 15px; text-align: right;">
-              <!-- LikeBtn（いいねボタン） -->
+              <!-- LikeBtn（「いいね」のみ表示） -->
               <span class="likebtn-wrapper" 
                     data-theme="custom" 
                     data-btn_size="small"
@@ -124,6 +124,7 @@
                     data-brdr_color="#f59e0b"
                     data-fnt_color="#fcd34d"
                     data-icon_l_c="#fcd34d"
+                    data-dislike_enabled="false"
                     data-identifier="${itemIdentifier}"
                     data-show_like_label="false"
                     data-popup_disabled="true"
